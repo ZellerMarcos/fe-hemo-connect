@@ -1,7 +1,7 @@
 :root {
   font-family: Georgia, 'Times New Roman', serif;
-  color: #17231f;
-  background: #f3f0e8;
+  color: #231f20;
+  background: #f8eee9;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
 }
@@ -26,14 +26,14 @@ body {
 .intro {
   width: min(100%, 42rem);
   padding: clamp(2rem, 8vw, 5rem);
-  border-left: 0.35rem solid #c46b3c;
-  background: #fffdf8;
-  box-shadow: 0 1.5rem 3rem rgba(23, 35, 31, 0.08);
+  border-left: 0.35rem solid #b42332;
+  background: #fffaf7;
+  box-shadow: 0 1.5rem 3rem rgba(92, 35, 37, 0.12);
 }
 
 .eyebrow {
   margin: 0 0 1.5rem;
-  color: #c46b3c;
+  color: #b42332;
   font-family: 'Trebuchet MS', sans-serif;
   font-size: 0.875rem;
   font-weight: 700;
@@ -52,7 +52,7 @@ h1 {
 .description {
   max-width: 34rem;
   margin: 2rem 0 0;
-  color: #53615b;
+  color: #684d4d;
   font-family: 'Trebuchet MS', sans-serif;
   font-size: 1.05rem;
   line-height: 1.6;

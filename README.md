@@ -1,8 +1,9 @@
-# lib.tech
+# Hemo Connect
 
 ## Descrição
 
-Frontend base de uma biblioteca inteligente e inclusiva para instituições de ensino.
+Frontend do Hemo Connect, plataforma que facilita o agendamento de doações,
+aproxima doadores dos hemocentros e incentiva uma frequência maior de doações.
 
 ## Tecnologias
 
