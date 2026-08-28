@@ -1,13 +1,14 @@
 import { FormEvent, useState } from 'react'
 import { entrar } from '../services/auth'
-import type { LoginResponse } from '../types/auth'
+import type { LoginUserResponse } from '../types/auth'
 
 interface LoginProps {
-  onLoginSucesso: (usuario: LoginResponse) => void
+  onLoginSucesso: (usuario: LoginUserResponse) => void
+  onTwoFactor: (email: string) => void
   onIrParaCadastro: () => void
 }
 
-export function Login({ onLoginSucesso, onIrParaCadastro }: LoginProps) {
+export function Login({ onLoginSucesso, onTwoFactor, onIrParaCadastro }: LoginProps) {
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
   const [erro, setErro] = useState('')
@@ -23,7 +24,12 @@ export function Login({ onLoginSucesso, onIrParaCadastro }: LoginProps) {
 
     setCarregando(true)
     try {
-      onLoginSucesso(await entrar({ email, senha }))
+      const response = await entrar({ email, senha })
+      if ('requires_2fa' in response) {
+        onTwoFactor(email)
+        return
+      }
+      onLoginSucesso(response)
     } catch {
       setErro('E-mail ou senha inválidos.')
     } finally {

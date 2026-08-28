@@ -1,18 +1,32 @@
 import { useState } from 'react'
 import { Cadastro } from './pages/Cadastro'
 import { Login } from './pages/Login'
-import type { LoginResponse } from './types/auth'
+import { TwoFactor } from './pages/TwoFactor'
+import type { LoginUserResponse } from './types/auth'
 
-type View = 'login' | 'cadastro' | 'home'
+type View = 'login' | 'cadastro' | 'two-factor' | 'home'
 
 function App() {
   const [view, setView] = useState<View>('login')
-  const [usuario, setUsuario] = useState<LoginResponse | null>(null)
+  const [usuario, setUsuario] = useState<LoginUserResponse | null>(null)
+  const [twoFactorEmail, setTwoFactorEmail] = useState('')
 
   if (view === 'cadastro') {
     return (
       <main className="page-shell">
         <Cadastro onCadastroSucesso={() => setView('login')} onIrParaLogin={() => setView('login')} />
+      </main>
+    )
+  }
+
+  if (view === 'two-factor') {
+    return (
+      <main className="page-shell">
+        <TwoFactor
+          email={twoFactorEmail}
+          onSucesso={() => setView('home')}
+          onVoltar={() => { setTwoFactorEmail(''); setView('login') }}
+        />
       </main>
     )
   }
@@ -31,7 +45,11 @@ function App() {
 
   return (
     <main className="page-shell">
-      <Login onLoginSucesso={(loggedUser) => { setUsuario(loggedUser); setView('home') }} onIrParaCadastro={() => setView('cadastro')} />
+      <Login
+        onLoginSucesso={(loggedUser) => { setUsuario(loggedUser); setView('home') }}
+        onTwoFactor={(email) => { setTwoFactorEmail(email); setView('two-factor') }}
+        onIrParaCadastro={() => setView('cadastro')}
+      />
     </main>
   )
 }
