@@ -116,9 +116,3 @@ Essa estrutura serve como base para a evolução do dashboard e das telas de pro
 
 ---
 
-## Próximos passos sugeridos
-1. Finalizar o visual da área logada.
-2. Criar as telas de perfil, histórico e marcação de doação.
-3. Integrar os cards do dashboard com as rotas reais da API.
-4. Melhorar a identidade visual e a consistência dos componentes.
-5. Preparar a próxima release com a evolução da experiência do usuário.
