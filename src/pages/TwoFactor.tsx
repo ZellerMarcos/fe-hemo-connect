@@ -14,6 +14,7 @@ export function TwoFactor({ email, onSucesso, onVoltar }: TwoFactorProps) {
   const codeInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
+    // O foco inicial reduz etapas para quem usa teclado ou leitor de tela.
     codeInputRef.current?.focus()
   }, [])
 
@@ -28,6 +29,7 @@ export function TwoFactor({ email, onSucesso, onVoltar }: TwoFactorProps) {
     setCarregando(true)
     try {
       const response = await verifyTwoFactor({ email, code })
+      // O código permanece somente no estado do formulário e é enviado ao backend.
       if (!response.authenticated) {
         setErro('Código de verificação inválido.')
         return
@@ -68,6 +70,7 @@ export function TwoFactor({ email, onSucesso, onVoltar }: TwoFactorProps) {
           {carregando ? 'Confirmando...' : 'Confirmar'}
         </button>
       </form>
+      {/* O backend atual não oferece reenvio; não simulamos uma chamada inexistente. */}
       <button className="secondary-button" type="button" disabled>
         Reenviar código
       </button>

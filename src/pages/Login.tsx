@@ -25,6 +25,7 @@ export function Login({ onLoginSucesso, onTwoFactor, onIrParaCadastro }: LoginPr
     setCarregando(true)
     try {
       const response = await entrar({ email, senha })
+      // O login só avança após o segundo fator; a senha não é repassada para a próxima tela.
       if ('requires_2fa' in response) {
         onTwoFactor(email)
         return

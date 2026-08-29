@@ -9,6 +9,7 @@ type View = 'login' | 'cadastro' | 'two-factor' | 'home'
 function App() {
   const [view, setView] = useState<View>('login')
   const [usuario, setUsuario] = useState<LoginUserResponse | null>(null)
+  // O e-mail pendente vive apenas durante o fluxo atual; não é uma credencial.
   const [twoFactorEmail, setTwoFactorEmail] = useState('')
 
   if (view === 'cadastro') {
