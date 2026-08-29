@@ -6,9 +6,10 @@ interface LoginProps {
   onLoginSucesso: (usuario: LoginUserResponse) => void
   onTwoFactor: (email: string) => void
   onIrParaCadastro: () => void
+  mensagemSessaoExpirada?: string
 }
 
-export function Login({ onLoginSucesso, onTwoFactor, onIrParaCadastro }: LoginProps) {
+export function Login({ onLoginSucesso, onTwoFactor, onIrParaCadastro, mensagemSessaoExpirada }: LoginProps) {
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
   const [erro, setErro] = useState('')
@@ -45,6 +46,9 @@ export function Login({ onLoginSucesso, onTwoFactor, onIrParaCadastro }: LoginPr
         <h1 id="login-title">Bem-vindo de volta</h1>
         <p>Entre para acompanhar suas doações.</p>
       </div>
+      {mensagemSessaoExpirada && (
+        <p className="feedback error session-expired-message" role="alert">{mensagemSessaoExpirada}</p>
+      )}
       <form onSubmit={handleSubmit} noValidate>
         <label>E-mail<input type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" required /></label>
         <label>Senha<input type="password" value={senha} onChange={(event) => setSenha(event.target.value)} autoComplete="current-password" required /></label>

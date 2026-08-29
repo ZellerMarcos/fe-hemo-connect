@@ -33,6 +33,10 @@ body {
   box-shadow: 0 1.5rem 3rem rgba(92, 35, 37, 0.12);
 }
 
+.dashboard-panel {
+  width: min(100%, 48rem);
+}
+
 .eyebrow {
   margin: 0 0 1.5rem;
   color: #b42332;
@@ -169,6 +173,43 @@ button:disabled {
 .feedback.success {
   background: #e7f3e8;
   color: #245b32;
+}
+
+.session-expired-message {
+  margin-bottom: 1rem;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.dashboard-card {
+  display: grid;
+  gap: 0.5rem;
+  min-height: 9rem;
+  padding: 1.25rem;
+  border: 1px solid #d5bcb6;
+  border-radius: 0.75rem;
+  background: linear-gradient(180deg, #fffaf7 0%, #fcefe7 100%);
+  color: #231f20;
+  text-align: left;
+}
+
+.dashboard-card:hover {
+  background: linear-gradient(180deg, #fffaf7 0%, #f5dfd5 100%);
+}
+
+.card-title {
+  color: #8f1c29;
+  font: 700 1.05rem 'Trebuchet MS', sans-serif;
+}
+
+.card-description {
+  color: #684d4d;
+  font: 0.9rem/1.5 'Trebuchet MS', sans-serif;
 }
 
 .welcome-panel .description {

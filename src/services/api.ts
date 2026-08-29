@@ -15,6 +15,9 @@ export async function request<T>(path: string, options: RequestInit = {}): Promi
     try {
       const body = await response.json()
       if (response.status === 409) message = body.detail
+      if (response.status === 401 && body?.detail && !path.includes('/auth/login') && !path.includes('/auth/2fa')) {
+        window.dispatchEvent(new CustomEvent('session-expired'))
+      }
     } catch {
       // Mantém uma mensagem genérica quando a API não retorna JSON.
     }
