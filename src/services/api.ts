@@ -15,7 +15,7 @@ export async function request<T>(path: string, options: RequestInit = {}): Promi
     let message = 'Não foi possível concluir a operação.'
     try {
       const body = await response.json()
-      if (response.status === 409) message = body.detail
+      if (body?.detail) message = body.detail
       // Qualquer 401 em rotas protegidas sinaliza sessão inválida ou expirada; o app reage redirecionando para o login.
       if (response.status === 401 && body?.detail && !path.includes('/auth/login') && !path.includes('/auth/2fa')) {
         window.dispatchEvent(new CustomEvent('session-expired'))

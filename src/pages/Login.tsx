@@ -36,9 +36,10 @@ export function Login({ onLoginSucesso, onTwoFactor, onIrParaCadastro, mensagemS
       }
       // O fluxo de login completo gera a sessão e leva o usuário diretamente à área logada.
       onLoginSucesso(response)
-    } catch {
-      // Qualquer falha de credencial ou autenticação gera uma mensagem simples para o usuário.
-      setErro('E-mail ou senha inválidos.')
+    } catch (error) {
+      // O frontend reutiliza a mensagem detalhada do backend, inclusive o número de tentativas restantes e o bloqueio do usuário.
+      const mensagem = error instanceof Error ? error.message : 'E-mail ou senha inválidos.'
+      setErro(mensagem)
     } finally {
       setCarregando(false)
     }
