@@ -75,11 +75,6 @@ export function TwoFactor({ email, onSucesso, onVoltar }: TwoFactorProps) {
           {carregando ? 'Confirmando...' : 'Confirmar'}
         </button>
       </form>
-      {/* O backend atual não oferece reenvio; não simulamos uma chamada inexistente. */}
-      <button className="secondary-button" type="button" disabled>
-        Reenviar código
-      </button>
-      <p className="form-note">O reenvio estará disponível quando o backend oferecer esse endpoint.</p>
       <button className="text-button" type="button" onClick={onVoltar}>Voltar para o login</button>
     </section>
   )
