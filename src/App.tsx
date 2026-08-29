@@ -46,7 +46,19 @@ function App() {
       <main className="page-shell">
         <TwoFactor
           email={twoFactorEmail}
-          onSucesso={() => setView('home')}
+          onSucesso={() => {
+            const nome = twoFactorEmail.split('@')[0] || 'Usuário'
+            setMensagemSessaoExpirada('')
+            setUsuario({
+              id: 0,
+              nome,
+              email: twoFactorEmail,
+              perfil: 'DOADOR',
+              status: 'ATIVO',
+              hemocentro_id: null,
+            })
+            setView('home')
+          }}
           onVoltar={() => { setTwoFactorEmail(''); setView('login') }}
         />
       </main>
