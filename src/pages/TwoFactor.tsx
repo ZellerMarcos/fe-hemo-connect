@@ -14,28 +14,33 @@ export function TwoFactor({ email, onSucesso, onVoltar }: TwoFactorProps) {
   const codeInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    // O foco inicial reduz etapas para quem usa teclado ou leitor de tela.
+    // A tela move o foco para o campo do código para acelerar a validação e melhorar a acessibilidade.
     codeInputRef.current?.focus()
   }, [])
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    // O envio do código confirma a segunda etapa da autenticação antes de liberar o acesso.
     event.preventDefault()
     setErro('')
     if (!/^\d{6}$/.test(code)) {
+      // Valida o formato do código para evitar erros simples antes de comunicarmos com o backend.
       setErro('Informe o código de 6 dígitos.')
       return
     }
 
     setCarregando(true)
     try {
+      // O backend valida o código e retorna a confirmação de que a autenticação foi concluída.
       const response = await verifyTwoFactor({ email, code })
-      // O código permanece somente no estado do formulário e é enviado ao backend.
       if (!response.authenticated) {
+        // Qualquer resposta de autenticação falsa significa que o código não foi aceito.
         setErro('Código de verificação inválido.')
         return
       }
+      // A aprovação do 2FA libera o acesso à área logada do sistema.
       onSucesso()
     } catch (error) {
+      // Mensagens de erro do backend são repassadas para manter o usuário informado.
       setErro(error instanceof Error ? error.message : 'Código de verificação inválido.')
     } finally {
       setCarregando(false)

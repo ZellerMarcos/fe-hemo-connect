@@ -16,23 +16,28 @@ export function Login({ onLoginSucesso, onTwoFactor, onIrParaCadastro, mensagemS
   const [carregando, setCarregando] = useState(false)
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    // A submissão valida primeiro o formulário local e então repassa a requisição ao backend.
     event.preventDefault()
     setErro('')
     if (!email.trim() || !senha) {
+      // Evita requisição vazia e orienta o usuário a preencher os campos obrigatórios.
       setErro('Informe seu e-mail e sua senha.')
       return
     }
 
     setCarregando(true)
     try {
+      // O backend responde com 2FA quando a credencial é válida, antes de concluir a sessão.
       const response = await entrar({ email, senha })
-      // O login só avança após o segundo fator; a senha não é repassada para a próxima tela.
       if ('requires_2fa' in response) {
+        // O usuário precisa confirmar a segunda etapa antes de ser considerado autenticado.
         onTwoFactor(email)
         return
       }
+      // O fluxo de login completo gera a sessão e leva o usuário diretamente à área logada.
       onLoginSucesso(response)
     } catch {
+      // Qualquer falha de credencial ou autenticação gera uma mensagem simples para o usuário.
       setErro('E-mail ou senha inválidos.')
     } finally {
       setCarregando(false)
@@ -47,6 +52,7 @@ export function Login({ onLoginSucesso, onTwoFactor, onIrParaCadastro, mensagemS
         <p>Entre para acompanhar suas doações.</p>
       </div>
       {mensagemSessaoExpirada && (
+        // A mensagem de expiração é exibida somente quando o backend rejeitou a sessão por timeout.
         <p className="feedback error session-expired-message" role="alert">{mensagemSessaoExpirada}</p>
       )}
       <form onSubmit={handleSubmit} noValidate>

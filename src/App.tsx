@@ -6,17 +6,23 @@ import type { LoginUserResponse } from './types/auth'
 
 type View = 'login' | 'cadastro' | 'two-factor' | 'home'
 
+// Mensagem compartilhada para qualquer fluxo em que a sessão foi invalidada pelo backend.
 const MENSAGEM_SESSAO_EXPIRADA = 'Sua sessao expirou, realize novamente seu login'
 
 function App() {
+  // Estado principal de navegação: decide qual tela o usuário está visualizando no momento.
   const [view, setView] = useState<View>('login')
+  // Usuário autenticado em memória para renderizar a área logada após o login ou 2FA.
   const [usuario, setUsuario] = useState<LoginUserResponse | null>(null)
-  // O e-mail pendente vive apenas durante o fluxo atual; não é uma credencial.
+  // O e-mail pendente vive apenas durante o fluxo atual; não é uma credencial persistente.
   const [twoFactorEmail, setTwoFactorEmail] = useState('')
+  // Mensagem de sessão expirada exibida na tela de login após o backend bloquear o acesso.
   const [mensagemSessaoExpirada, setMensagemSessaoExpirada] = useState('')
 
   useEffect(() => {
+    // O backend dispara esse evento quando a sessão expira por inatividade.
     const handleSessionExpired = () => {
+      // Limpa dados sensíveis da sessão e força o retorno à tela de autenticação.
       setUsuario(null)
       setTwoFactorEmail('')
       setMensagemSessaoExpirada(MENSAGEM_SESSAO_EXPIRADA)
@@ -27,6 +33,7 @@ function App() {
     return () => window.removeEventListener('session-expired', handleSessionExpired)
   }, [])
 
+  // Centraliza a ação de sucesso no login para manter o estado consistente em toda a aplicação.
   function handleLoginSucesso(loggedUser: LoginUserResponse) {
     setMensagemSessaoExpirada('')
     setUsuario(loggedUser)
@@ -47,6 +54,7 @@ function App() {
         <TwoFactor
           email={twoFactorEmail}
           onSucesso={() => {
+            // Quando o código for validado, a aplicação registra um usuário temporário na memória para permitir a navegação para a área logada.
             const nome = twoFactorEmail.split('@')[0] || 'Usuário'
             setMensagemSessaoExpirada('')
             setUsuario({
@@ -92,6 +100,7 @@ function App() {
     )
   }
 
+  // Tela padrão de autenticação quando o usuário ainda não entrou no sistema ou a sessão foi encerrada.
   return (
     <main className="page-shell">
       <Login
