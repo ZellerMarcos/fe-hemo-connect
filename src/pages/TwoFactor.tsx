@@ -3,7 +3,7 @@ import { verifyTwoFactor } from '../services/auth'
 
 interface TwoFactorProps {
   email: string
-  onSucesso: () => void
+  onSucesso: (nome: string) => void
   onVoltar: () => void
 }
 
@@ -14,28 +14,33 @@ export function TwoFactor({ email, onSucesso, onVoltar }: TwoFactorProps) {
   const codeInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    // O foco inicial reduz etapas para quem usa teclado ou leitor de tela.
+    // A tela move o foco para o campo do código para acelerar a validação e melhorar a acessibilidade.
     codeInputRef.current?.focus()
   }, [])
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    // O envio do código confirma a segunda etapa da autenticação antes de liberar o acesso.
     event.preventDefault()
     setErro('')
     if (!/^\d{6}$/.test(code)) {
+      // Valida o formato do código para evitar erros simples antes de comunicarmos com o backend.
       setErro('Informe o código de 6 dígitos.')
       return
     }
 
     setCarregando(true)
     try {
+      // O backend valida o código e retorna a confirmação de que a autenticação foi concluída.
       const response = await verifyTwoFactor({ email, code })
-      // O código permanece somente no estado do formulário e é enviado ao backend.
       if (!response.authenticated) {
+        // Qualquer resposta de autenticação falsa significa que o código não foi aceito.
         setErro('Código de verificação inválido.')
         return
       }
-      onSucesso()
+      // A aprovação do 2FA libera o acesso à área logada do sistema.
+      onSucesso(response.nome || email.split('@')[0] || 'Usuário')
     } catch (error) {
+      // Mensagens de erro do backend são repassadas para manter o usuário informado.
       setErro(error instanceof Error ? error.message : 'Código de verificação inválido.')
     } finally {
       setCarregando(false)
@@ -70,11 +75,6 @@ export function TwoFactor({ email, onSucesso, onVoltar }: TwoFactorProps) {
           {carregando ? 'Confirmando...' : 'Confirmar'}
         </button>
       </form>
-      {/* O backend atual não oferece reenvio; não simulamos uma chamada inexistente. */}
-      <button className="secondary-button" type="button" disabled>
-        Reenviar código
-      </button>
-      <p className="form-note">O reenvio estará disponível quando o backend oferecer esse endpoint.</p>
       <button className="text-button" type="button" onClick={onVoltar}>Voltar para o login</button>
     </section>
   )

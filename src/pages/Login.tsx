@@ -6,34 +6,41 @@ interface LoginProps {
   onLoginSucesso: (usuario: LoginUserResponse) => void
   onTwoFactor: (email: string) => void
   onIrParaCadastro: () => void
+  onEsqueciSenha: () => void
   mensagemSessaoExpirada?: string
 }
 
-export function Login({ onLoginSucesso, onTwoFactor, onIrParaCadastro, mensagemSessaoExpirada }: LoginProps) {
+export function Login({ onLoginSucesso, onTwoFactor, onIrParaCadastro, onEsqueciSenha, mensagemSessaoExpirada }: LoginProps) {
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
   const [erro, setErro] = useState('')
   const [carregando, setCarregando] = useState(false)
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    // A submissão valida primeiro o formulário local e então repassa a requisição ao backend.
     event.preventDefault()
     setErro('')
     if (!email.trim() || !senha) {
+      // Evita requisição vazia e orienta o usuário a preencher os campos obrigatórios.
       setErro('Informe seu e-mail e sua senha.')
       return
     }
 
     setCarregando(true)
     try {
+      // O backend responde com 2FA quando a credencial é válida, antes de concluir a sessão.
       const response = await entrar({ email, senha })
-      // O login só avança após o segundo fator; a senha não é repassada para a próxima tela.
       if ('requires_2fa' in response) {
+        // O usuário precisa confirmar a segunda etapa antes de ser considerado autenticado.
         onTwoFactor(email)
         return
       }
+      // O fluxo de login completo gera a sessão e leva o usuário diretamente à área logada.
       onLoginSucesso(response)
-    } catch {
-      setErro('E-mail ou senha inválidos.')
+    } catch (error) {
+      // O frontend reutiliza a mensagem detalhada do backend, inclusive o número de tentativas restantes e o bloqueio do usuário.
+      const mensagem = error instanceof Error ? error.message : 'E-mail ou senha inválidos.'
+      setErro(mensagem)
     } finally {
       setCarregando(false)
     }
@@ -47,6 +54,7 @@ export function Login({ onLoginSucesso, onTwoFactor, onIrParaCadastro, mensagemS
         <p>Entre para acompanhar suas doações.</p>
       </div>
       {mensagemSessaoExpirada && (
+        // A mensagem de expiração é exibida somente quando o backend rejeitou a sessão por timeout.
         <p className="feedback error session-expired-message" role="alert">{mensagemSessaoExpirada}</p>
       )}
       <form onSubmit={handleSubmit} noValidate>
@@ -55,6 +63,7 @@ export function Login({ onLoginSucesso, onTwoFactor, onIrParaCadastro, mensagemS
         {erro && <p className="feedback error" role="alert">{erro}</p>}
         <button type="submit" disabled={carregando}>{carregando ? 'Entrando...' : 'Entrar'}</button>
       </form>
+      <button className="text-button" type="button" onClick={onEsqueciSenha}>Esqueci minha senha</button>
       <button className="text-button" type="button" onClick={onIrParaCadastro}>Criar uma conta</button>
     </section>
   )

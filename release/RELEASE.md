@@ -16,6 +16,8 @@ Nesta release, o foco principal foi consolidar o acesso do usuário, a validaç�
 - Tela de login com e-mail e senha.
 - Fluxo de autenticação em duas etapas (2FA).
 - Mensagem de erro para credenciais inválidas.
+- Feedback do backend com número de tentativas restantes antes do bloqueio.
+- Bloqueio temporário do usuário após 5 tentativas inválidas em 15 minutos, com mensagem de 1 hora de espera.
 - Tela de cadastro inicial do usuário.
 - Redirecionamento para o login após expiração de sessão.
 - Exibição da mensagem:
@@ -41,6 +43,7 @@ Nesta release, o foco principal foi consolidar o acesso do usuário, a validaç�
 - O usuário informa e-mail e senha.
 - A aplicação envia a requisição para a API.
 - Caso a credencial esteja correta, o sistema avança para a etapa de verificação em 2FA.
+- Se a credencial estiver incorreta, o backend responde com as tentativas restantes antes do bloqueio e, quando alcançado o limite, exibe o aviso de conta bloqueada por 1 hora.
 
 ### Verificação em 2FA
 - O usuário recebe um código de 6 dígitos.
@@ -99,6 +102,8 @@ Essa estrutura serve como base para a evolução do dashboard e das telas de pro
 - Fluxo básico de autenticação.
 - Fluxo de 2FA.
 - Redirecionamento por expiração de sessão.
+- Proteção anti-bruteforce com bloqueio temporário após 5 tentativas inválidas.
+- Mensagens de feedback no login para tentativas restantes e conta bloqueada.
 - Tela inicial pós-login.
 - Estrutura base para evolução da experiência do usuário.
 
