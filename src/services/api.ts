@@ -1,5 +1,6 @@
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://127.0.0.1:8000'
 
+// A função request centraliza a comunicação HTTP da aplicação, padronizando URL base, headers e tratamento de erros do backend.
 export async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   // Centralizar o fetch mantém a URL base, os headers e o padrão de tratamento de erros em um único ponto.
   const response = await fetch(`${API_URL}${path}`, {

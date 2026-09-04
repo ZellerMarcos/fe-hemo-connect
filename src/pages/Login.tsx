@@ -6,10 +6,11 @@ interface LoginProps {
   onLoginSucesso: (usuario: LoginUserResponse) => void
   onTwoFactor: (email: string) => void
   onIrParaCadastro: () => void
+  onEsqueciSenha: () => void
   mensagemSessaoExpirada?: string
 }
 
-export function Login({ onLoginSucesso, onTwoFactor, onIrParaCadastro, mensagemSessaoExpirada }: LoginProps) {
+export function Login({ onLoginSucesso, onTwoFactor, onIrParaCadastro, onEsqueciSenha, mensagemSessaoExpirada }: LoginProps) {
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
   const [erro, setErro] = useState('')
@@ -62,6 +63,7 @@ export function Login({ onLoginSucesso, onTwoFactor, onIrParaCadastro, mensagemS
         {erro && <p className="feedback error" role="alert">{erro}</p>}
         <button type="submit" disabled={carregando}>{carregando ? 'Entrando...' : 'Entrar'}</button>
       </form>
+      <button className="text-button" type="button" onClick={onEsqueciSenha}>Esqueci minha senha</button>
       <button className="text-button" type="button" onClick={onIrParaCadastro}>Criar uma conta</button>
     </section>
   )

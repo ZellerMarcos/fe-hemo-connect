@@ -3,7 +3,7 @@ import { verifyTwoFactor } from '../services/auth'
 
 interface TwoFactorProps {
   email: string
-  onSucesso: () => void
+  onSucesso: (nome: string) => void
   onVoltar: () => void
 }
 
@@ -38,7 +38,7 @@ export function TwoFactor({ email, onSucesso, onVoltar }: TwoFactorProps) {
         return
       }
       // A aprovação do 2FA libera o acesso à área logada do sistema.
-      onSucesso()
+      onSucesso(response.nome || email.split('@')[0] || 'Usuário')
     } catch (error) {
       // Mensagens de erro do backend são repassadas para manter o usuário informado.
       setErro(error instanceof Error ? error.message : 'Código de verificação inválido.')
