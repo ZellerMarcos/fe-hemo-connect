@@ -120,4 +120,3 @@ Essa estrutura serve como base para a evolução do dashboard e das telas de pro
 - A interface atual atende à necessidade de base funcional para a autenticação e navegação inicial do produto.
 
 ---
-
