@@ -13,12 +13,19 @@ export function ResetPassword({ token, onVoltarAoLogin }: ResetPasswordProps) {
   const [erro, setErro] = useState('')
   const [sucesso, setSucesso] = useState('')
   const [carregando, setCarregando] = useState(false)
+  // Impede novas interações nesta tela depois que o backend consumir o token com sucesso.
+  const [tokenConsumido, setTokenConsumido] = useState(false)
 
   // O envio confirma que as senhas são válidas e repassa a nova senha para o backend para persistência.
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setErro('')
     setSucesso('')
+
+    if (!token || tokenConsumido) {
+      setErro('Este link de redefinição já foi utilizado ou é inválido.')
+      return
+    }
 
     if (!senha || !confirmacao) {
       setErro('Preencha a nova senha e a confirmação.')
@@ -39,6 +46,8 @@ export function ResetPassword({ token, onVoltarAoLogin }: ResetPasswordProps) {
     try {
       await redefinirSenha({ token, senha })
       setSucesso('Senha redefinida com sucesso. Você já pode entrar novamente.')
+      // O token deixa de ser utilizável após a primeira redefinição concluída.
+      setTokenConsumido(true)
       setSenha('')
       setConfirmacao('')
     } catch (error) {
@@ -57,6 +66,7 @@ export function ResetPassword({ token, onVoltarAoLogin }: ResetPasswordProps) {
         <p>Crie uma nova senha para continuar.</p>
       </div>
 
+      {!tokenConsumido && (
       <form onSubmit={handleSubmit} noValidate>
         <label>
           Nova senha
@@ -75,6 +85,7 @@ export function ResetPassword({ token, onVoltarAoLogin }: ResetPasswordProps) {
           {carregando ? 'Salvando...' : 'Salvar nova senha'}
         </button>
       </form>
+      )}
 
       <button className="text-button" type="button" onClick={onVoltarAoLogin}>
         Voltar para o login
