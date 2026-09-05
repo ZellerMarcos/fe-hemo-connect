@@ -1,7 +1,7 @@
 # Release Frontend do Projeto Hemo Connect
 
 ## Data da release
-- 2026-09-05
+- 2026-08-29
 
 ## Visão geral
 O frontend do projeto Hemo Connect foi estruturado em React com Vite para atender ao fluxo de autenticação, validação em duas etapas, controle da sessão e acesso à área logada do sistema.
