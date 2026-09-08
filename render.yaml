@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: fe-hemo-connect-1
+    env: static
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
