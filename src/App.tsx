@@ -11,9 +11,27 @@ type View = 'login' | 'cadastro' | 'forgot-password' | 'reset-password' | 'two-f
 // Mensagem compartilhada para qualquer fluxo em que a sessão foi invalidada pelo backend.
 const MENSAGEM_SESSAO_EXPIRADA = 'Sua sessao expirou, realize novamente seu login'
 
+function getInitialView(): View {
+  const pathname = window.location.pathname.replace(/\/$/, '') || '/'
+
+  if (pathname === '/reset-password') return 'reset-password'
+  if (pathname === '/forgot-password' || pathname === '/auth/forgot-password') return 'forgot-password'
+  if (pathname === '/cadastro') return 'cadastro'
+  if (pathname === '/two-factor') return 'two-factor'
+  return 'login'
+}
+
+function isPublicAuthPath(pathname: string): boolean {
+  const normalizedPath = pathname.replace(/\/$/, '') || '/'
+  return normalizedPath === '/login'
+    || normalizedPath === '/forgot-password'
+    || normalizedPath === '/auth/forgot-password'
+    || normalizedPath === '/reset-password'
+}
+
 function App() {
   // Estado principal de navegação: decide qual tela o usuário está visualizando no momento.
-  const [view, setView] = useState<View>(() => window.location.pathname === '/reset-password' ? 'reset-password' : 'login')
+  const [view, setView] = useState<View>(getInitialView)
   // Usuário autenticado em memória para renderizar a área logada após o login ou 2FA.
   const [usuario, setUsuario] = useState<LoginUserResponse | null>(null)
   // O e-mail pendente vive apenas durante o fluxo atual; não é uma credencial persistente.
@@ -26,6 +44,8 @@ function App() {
   useEffect(() => {
     // O backend dispara esse evento quando a sessão expira por inatividade.
     const handleSessionExpired = () => {
+      if (isPublicAuthPath(window.location.pathname)) return
+
       // Limpa dados sensíveis da sessão e força o retorno à tela de autenticação.
       setUsuario(null)
       setTwoFactorEmail('')
