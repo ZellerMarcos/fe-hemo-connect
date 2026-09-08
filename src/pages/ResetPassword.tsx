@@ -59,7 +59,7 @@ export function ResetPassword({ token, onVoltarAoLogin }: ResetPasswordProps) {
   }
 
   return (
-    <section className="auth-panel" aria-labelledby="reset-password-title">
+    <section id="reset-password-modal" className="auth-panel" aria-labelledby="reset-password-title">
       <div className="panel-heading">
         <p className="eyebrow">Hemo Connect</p>
         <h1 id="reset-password-title">Nova senha</h1>
