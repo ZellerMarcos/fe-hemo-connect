@@ -26,6 +26,17 @@ function AuthenticatedHome({ usuario }: { usuario: LoginUserResponse }) {
   )
 }
 
+function ResetPasswordEntry() {
+  const location = useLocation()
+  const token = new URLSearchParams(location.search).get('token')
+
+  if (token) {
+    return <Navigate to={`/reset-password${location.search}`} replace />
+  }
+
+  return <Navigate to="/login" replace />
+}
+
 function App() {
   const navigate = useNavigate()
   const location = useLocation()
@@ -74,6 +85,7 @@ function App() {
       <Route path="/reset-password" element={<main className="page-shell"><ResetPassword token={new URLSearchParams(location.search).get('token') ?? ''} onVoltarAoLogin={() => navigate('/login')} /></main>} />
       <Route path="/cadastro" element={<main className="page-shell"><Cadastro onCadastroSucesso={() => navigate('/login')} onIrParaLogin={() => navigate('/login')} /></main>} />
       <Route path="/two-factor" element={<main className="page-shell"><TwoFactor email={twoFactorEmail} onSucesso={handleTwoFactorSuccess} onVoltar={() => { setTwoFactorEmail(''); navigate('/login') }} /></main>} />
+      <Route path="/index.html" element={<ResetPasswordEntry />} />
       <Route path="/home" element={usuario ? <AuthenticatedHome usuario={usuario} /> : <Navigate to="/login" replace />} />
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
