@@ -1,7 +1,7 @@
 services:
   - type: web
     name: fe-hemo-connect-1
-    env: static
+    runtime: static
     buildCommand: npm install && npm run build
     staticPublishPath: ./dist
     routes:
