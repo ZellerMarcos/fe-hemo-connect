@@ -11,16 +11,17 @@ import {
   formatarConsentimentos,
   formatarDadosTitular,
 } from '../utils/privacyFormatters'
-import { downloadExportacaoTitularExcel } from '../utils/privacyExportExcel'
+import { downloadExportacaoTitularPdf } from '../utils/privacyExportPdf'
 
 interface PrivacidadeProps {
   email: string
-  onVoltar: () => void
   onContaRemovida: () => void
+  onVoltar?: () => void
+  embedded?: boolean
 }
 
 // Centraliza os fluxos de direitos do titular (consulta, exportacao, revogacao e exclusao).
-export function Privacidade({ email, onVoltar, onContaRemovida }: PrivacidadeProps) {
+export function Privacidade({ email, onVoltar, onContaRemovida, embedded = false }: PrivacidadeProps) {
   const [dados, setDados] = useState<DadosTitular | null>(null)
   const [finalidade, setFinalidade] = useState('seguranca')
   const [mensagem, setMensagem] = useState('')
@@ -44,15 +45,15 @@ export function Privacidade({ email, onVoltar, onContaRemovida }: PrivacidadePro
     }
   }
 
-  // Gera o arquivo XLSX com os dados tratados para portabilidade do titular.
+  // Gera o arquivo PDF com os dados tratados para portabilidade do titular.
   async function handleExportar() {
     setErro('')
     setMensagem('')
     setCarregando(true)
     try {
       const payload = await exportarMeusDados(email)
-      await downloadExportacaoTitularExcel(payload)
-      setMensagem('Download da exportacao concluido com sucesso.')
+      await downloadExportacaoTitularPdf(payload)
+      setMensagem('Download do PDF concluido com sucesso.')
     } catch (error) {
       setErro(error instanceof Error ? error.message : 'Nao foi possivel exportar os dados do titular.')
     } finally {
@@ -99,7 +100,7 @@ export function Privacidade({ email, onVoltar, onContaRemovida }: PrivacidadePro
   }
 
   return (
-    <section className="auth-panel" aria-labelledby="privacy-title">
+    <section className={embedded ? 'privacy-embedded' : 'auth-panel'} aria-labelledby="privacy-title">
       <div className="panel-heading">
         <p className="eyebrow">Privacidade</p>
         <h1 id="privacy-title">Direitos do titular</h1>
@@ -164,7 +165,9 @@ export function Privacidade({ email, onVoltar, onContaRemovida }: PrivacidadePro
         </div>
       )}
 
-      <button className="text-button" type="button" onClick={onVoltar}>Voltar</button>
+      {onVoltar && (
+        <button className="text-button" type="button" onClick={onVoltar}>Voltar</button>
+      )}
     </section>
   )
 }
