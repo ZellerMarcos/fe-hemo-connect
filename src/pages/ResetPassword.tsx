@@ -1,4 +1,9 @@
 import { FormEvent, useState } from 'react'
+
+import { ArrowLeft, Eye, EyeOff, KeyRound } from 'lucide-react'
+
+import { Button } from '../components/ui/button'
+import { Input } from '../components/ui/input'
 import { redefinirSenha } from '../services/auth'
 
 interface ResetPasswordProps {
@@ -61,47 +66,49 @@ export function ResetPassword({ token, onVoltarAoLogin }: ResetPasswordProps) {
   }
 
   return (
-    <section id="reset-password-modal" className="auth-panel" aria-labelledby="reset-password-title">
-      <div className="panel-heading">
-        <p className="eyebrow">Hemo Connect</p>
-        <h1 id="reset-password-title">Nova senha</h1>
-        <p>Crie uma nova senha para continuar.</p>
+    <section id="reset-password-modal" className="w-full max-w-lg rounded-2xl border border-red-100 bg-white/92 p-6 shadow-2xl shadow-red-100/40 md:p-8" aria-labelledby="reset-password-title">
+      <div>
+        <p className="text-xs font-bold uppercase tracking-[0.16em] text-red-700">Hemo Connect</p>
+        <h1 id="reset-password-title" className="mt-3 text-3xl font-semibold text-zinc-900 md:text-4xl">Nova senha</h1>
+        <p className="mt-3 text-sm leading-relaxed text-zinc-600 md:text-base">Crie uma nova senha para continuar.</p>
       </div>
 
       {!tokenConsumido && (
-      <form onSubmit={handleSubmit} noValidate>
-        <label>
+      <form onSubmit={handleSubmit} noValidate className="mt-6 grid gap-4">
+        <label className="grid gap-2 text-sm font-semibold text-zinc-700">
           Nova senha
-          <span className="password-input">
-            <input type={mostrarSenha ? 'text' : 'password'} value={senha} onChange={(event) => setSenha(event.target.value)} autoComplete="new-password" required />
-            <button className="password-toggle" type="button" onClick={() => setMostrarSenha((current) => !current)} aria-label={mostrarSenha ? 'Ocultar senha' : 'Mostrar senha'}>
-              {mostrarSenha ? 'Ocultar' : 'Mostrar'}
+          <div className="relative">
+            <Input type={mostrarSenha ? 'text' : 'password'} className="pr-12" value={senha} onChange={(event) => setSenha(event.target.value)} autoComplete="new-password" required />
+            <button className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-zinc-500 hover:bg-red-50" type="button" onClick={() => setMostrarSenha((current) => !current)} aria-label={mostrarSenha ? 'Ocultar senha' : 'Mostrar senha'}>
+              {mostrarSenha ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
-          </span>
+          </div>
         </label>
 
-        <label>
+        <label className="grid gap-2 text-sm font-semibold text-zinc-700">
           Confirmar nova senha
-          <span className="password-input">
-            <input type={mostrarConfirmacao ? 'text' : 'password'} value={confirmacao} onChange={(event) => setConfirmacao(event.target.value)} autoComplete="new-password" required />
-            <button className="password-toggle" type="button" onClick={() => setMostrarConfirmacao((current) => !current)} aria-label={mostrarConfirmacao ? 'Ocultar confirmação de senha' : 'Mostrar confirmação de senha'}>
-              {mostrarConfirmacao ? 'Ocultar' : 'Mostrar'}
+          <div className="relative">
+            <Input type={mostrarConfirmacao ? 'text' : 'password'} className="pr-12" value={confirmacao} onChange={(event) => setConfirmacao(event.target.value)} autoComplete="new-password" required />
+            <button className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-zinc-500 hover:bg-red-50" type="button" onClick={() => setMostrarConfirmacao((current) => !current)} aria-label={mostrarConfirmacao ? 'Ocultar confirmação de senha' : 'Mostrar confirmação de senha'}>
+              {mostrarConfirmacao ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
-          </span>
+          </div>
         </label>
 
-        {erro && <p className="feedback error" role="alert">{erro}</p>}
-        {sucesso && <p className="feedback success" role="status">{sucesso}</p>}
+        {erro && <p className="rounded-xl bg-red-100 px-3 py-2 text-sm text-red-800" role="alert">{erro}</p>}
+        {sucesso && <p className="rounded-xl bg-emerald-100 px-3 py-2 text-sm text-emerald-800" role="status">{sucesso}</p>}
 
-        <button type="submit" disabled={carregando}>
+        <Button type="submit" disabled={carregando}>
+          <KeyRound size={16} />
           {carregando ? 'Salvando...' : 'Salvar nova senha'}
-        </button>
+        </Button>
       </form>
       )}
 
-      <button className="text-button" type="button" onClick={onVoltarAoLogin}>
+      <Button className="mt-4" variant="ghost" type="button" onClick={onVoltarAoLogin}>
+        <ArrowLeft size={16} />
         Voltar para o login
-      </button>
+      </Button>
     </section>
   )
 }

@@ -3,6 +3,7 @@ import { CalendarPlus2, Building2, HeartPulse, ShieldCheck } from 'lucide-react'
 import { motion } from 'motion/react'
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { Button } from './components/ui/button'
+import { AuthFrame } from './components/layout/AuthFrame'
 import { Cadastro } from './pages/Cadastro'
 import { ForgotPassword } from './pages/ForgotPassword'
 import { Login } from './pages/Login'
@@ -158,15 +159,15 @@ function App() {
 
   return (
     <Routes>
-      <Route path="/login" element={<main className="page-shell"><Login onLoginSucesso={handleLoginSucesso} onTwoFactor={(email) => { setTwoFactorEmail(email); navigate('/two-factor') }} onIrParaCadastro={() => navigate('/cadastro')} onEsqueciSenha={() => navigate('/forgot-password')} mensagemSessaoExpirada={mensagemSessaoExpirada} /></main>} />
-      <Route path="/forgot-password" element={<main className="page-shell"><ForgotPassword onVoltarAoLogin={() => navigate('/login')} /></main>} />
-      <Route path="/auth/forgot-password" element={<main className="page-shell"><ForgotPassword onVoltarAoLogin={() => navigate('/login')} /></main>} />
-      <Route path="/reset-password" element={<main className="page-shell"><ResetPassword token={new URLSearchParams(location.search).get('token') ?? ''} onVoltarAoLogin={() => navigate('/login')} /></main>} />
-      <Route path="/cadastro" element={<main className="page-shell"><Cadastro onCadastroSucesso={() => navigate('/login')} onIrParaLogin={() => navigate('/login')} /></main>} />
-      <Route path="/two-factor" element={<main className="page-shell"><TwoFactor email={twoFactorEmail} onSucesso={handleTwoFactorSuccess} onVoltar={() => { setTwoFactorEmail(''); navigate('/login') }} /></main>} />
+      <Route path="/login" element={<AuthFrame><Login onLoginSucesso={handleLoginSucesso} onTwoFactor={(email) => { setTwoFactorEmail(email); navigate('/two-factor') }} onIrParaCadastro={() => navigate('/cadastro')} onEsqueciSenha={() => navigate('/forgot-password')} mensagemSessaoExpirada={mensagemSessaoExpirada} /></AuthFrame>} />
+      <Route path="/forgot-password" element={<AuthFrame><ForgotPassword onVoltarAoLogin={() => navigate('/login')} /></AuthFrame>} />
+      <Route path="/auth/forgot-password" element={<AuthFrame><ForgotPassword onVoltarAoLogin={() => navigate('/login')} /></AuthFrame>} />
+      <Route path="/reset-password" element={<AuthFrame><ResetPassword token={new URLSearchParams(location.search).get('token') ?? ''} onVoltarAoLogin={() => navigate('/login')} /></AuthFrame>} />
+      <Route path="/cadastro" element={<AuthFrame><Cadastro onCadastroSucesso={() => navigate('/login')} onIrParaLogin={() => navigate('/login')} /></AuthFrame>} />
+      <Route path="/two-factor" element={<AuthFrame><TwoFactor email={twoFactorEmail} onSucesso={handleTwoFactorSuccess} onVoltar={() => { setTwoFactorEmail(''); navigate('/login') }} /></AuthFrame>} />
       <Route path="/index.html" element={<ResetPasswordEntry />} />
       <Route path="/home" element={usuario ? <AuthenticatedHome usuario={usuario} onAbrirPerfil={() => navigate('/perfil')} /> : <Navigate to="/login" replace />} />
-      <Route path="/perfil" element={usuario ? <main className="page-shell"><MeuPerfil usuario={usuario} onVoltarHome={() => navigate('/home')} onContaRemovida={() => { setUsuario(null); navigate('/login', { replace: true }) }} /></main> : <Navigate to="/login" replace />} />
+      <Route path="/perfil" element={usuario ? <AuthFrame><MeuPerfil usuario={usuario} onVoltarHome={() => navigate('/home')} onContaRemovida={() => { setUsuario(null); navigate('/login', { replace: true }) }} /></AuthFrame> : <Navigate to="/login" replace />} />
       {/* Rota protegida da central de privacidade; sem sessao ativa redireciona para login. */}
       <Route path="/privacidade" element={usuario ? <Navigate to="/perfil" replace /> : <Navigate to="/login" replace />} />
       <Route path="*" element={<Navigate to="/login" replace />} />
