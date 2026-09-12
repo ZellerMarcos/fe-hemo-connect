@@ -8,6 +8,7 @@ interface CadastroProps {
 
 export function Cadastro({ onCadastroSucesso, onIrParaLogin }: CadastroProps) {
   const [form, setForm] = useState({ nome: '', cpf: '', email: '', senha: '', confirmacaoSenha: '' })
+  const [consentimentoAceito, setConsentimentoAceito] = useState(false)
   const [erro, setErro] = useState('')
   const [sucesso, setSucesso] = useState(false)
   const [carregando, setCarregando] = useState(false)
@@ -46,6 +47,12 @@ export function Cadastro({ onCadastroSucesso, onIrParaLogin }: CadastroProps) {
       return
     }
 
+    // O cadastro so avanca quando o titular aceita explicitamente o tratamento de dados.
+    if (!consentimentoAceito) {
+      setErro('Voce deve aceitar o tratamento de dados para concluir o cadastro.')
+      return
+    }
+
     setCarregando(true)
     try {
       await cadastrarUsuario({
@@ -56,9 +63,14 @@ export function Cadastro({ onCadastroSucesso, onIrParaLogin }: CadastroProps) {
         perfil: 'DOADOR',
         status: 'ATIVO',
         hemocentro_id: null,
+        // O payload envia aceite, versao e finalidades para registro auditavel no backend.
+        consentimento_aceito: true,
+        consentimento_versao: 'v1.0',
+        consentimento_finalidades: ['cadastro', 'autenticacao', 'seguranca'],
       })
       setSucesso(true)
       setForm({ nome: '', cpf: '', email: '', senha: '', confirmacaoSenha: '' })
+      setConsentimentoAceito(false)
     } catch (error) {
       setErro(error instanceof Error ? error.message : 'Não foi possível realizar o cadastro.')
     } finally {
@@ -93,6 +105,17 @@ export function Cadastro({ onCadastroSucesso, onIrParaLogin }: CadastroProps) {
             <button className="password-toggle" type="button" onClick={() => setMostrarConfirmacao((current) => !current)} aria-label={mostrarConfirmacao ? 'Ocultar confirmação de senha' : 'Mostrar confirmação de senha'}>
               {mostrarConfirmacao ? 'Ocultar' : 'Mostrar'}
             </button>
+          </span>
+        </label>
+        <label className="consent-checkbox">
+          <input
+            type="checkbox"
+            checked={consentimentoAceito}
+            onChange={(event) => setConsentimentoAceito(event.target.checked)}
+            required
+          />
+          <span>
+            Li e aceito o tratamento dos meus dados para cadastro, autenticacao e seguranca da conta (versao v1.0).
           </span>
         </label>
         <p className="fixed-values">Perfil: <strong>Doador</strong> · Status: <strong>Ativo</strong></p>

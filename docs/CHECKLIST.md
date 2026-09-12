@@ -55,6 +55,24 @@ Este checklist organiza os requisitos de segurança e experiência do usuário i
 
 ---
 
+## 4. Conformidade com a LGPD
+
+| Requisito | Implementacao | Status |
+|---|---|---|
+| 4.1 — Listagem completa dos dados pessoais coletados | Inventario de dados do cliente documentado em `docs/LGPD.md` | Concluido |
+| 4.2 — Associacao de cada dado a uma finalidade | Matriz dado-finalidade por fluxo documentada em `docs/LGPD.md` | Concluido |
+| 4.3 — Evidencia de minimizacao de dados | Evidencias de minimizacao no frontend descritas em `docs/LGPD.md` | Concluido |
+| 4.4 — Registro explicito de consentimento | Cadastro exige aceite explicito de consentimento antes do envio | Concluido |
+| 4.5 — Consentimento associado a finalidade | Frontend envia finalidades e versao do termo no cadastro | Concluido |
+| 4.6 — Possibilidade de revogacao do consentimento | Central de privacidade executa revogacao por finalidade | Concluido |
+| 4.7 — Registro de data e versao do consentimento | Versao do termo enviada no cadastro e persistida no backend | Concluido |
+| 4.8 — Funcionalidade de consulta aos dados do titular | Central de privacidade consulta dados via `GET /privacy/me` | Concluido |
+| 4.9 — Funcionalidade de exportacao dos dados | Central de privacidade exporta dados via `GET /privacy/export` | Concluido |
+| 4.10 — Funcionalidade de exclusao dos dados pessoais | Central de privacidade chama `DELETE /privacy/me` | Concluido |
+| 4.11 — Fluxo de atendimento aos direitos documentado | Fluxo de atendimento e UX-base documentados em `docs/LGPD.md` | Concluido |
+
+---
+
 ## 3. Funcionalidades verificadas
 
 ### Cadastro e login
@@ -144,7 +162,9 @@ A documentação detalhada das entregas está disponível em:
 docs/releases/autenticacao (requisito 1)/RELEASE_requisito_01.md
 docs/releases/recuperar senha (requisito 2)/RELEASE_requisito_02.md
 docs/releases/criptografia (requisito 3)/RELEASE_requisito_03.md
+docs/releases/conformidade lgpd (requisito 4)/RELEASE_requisito_04.md
 docs/SECURITY.md
+docs/LGPD.md
 ```
 
 Esses arquivos descrevem os fluxos de tela, as integrações com a API, as mensagens exibidas e as regras de negócio relacionadas ao frontend.

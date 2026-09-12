@@ -254,6 +254,21 @@ button:disabled {
   font: 0.85rem/1.5 'Trebuchet MS', sans-serif;
 }
 
+/* Bloco visual do aceite explicito de consentimento no cadastro. */
+.consent-checkbox {
+  display: flex;
+  gap: 0.7rem;
+  align-items: flex-start;
+  font-weight: 400;
+  font-size: 0.85rem;
+  color: #684d4d;
+}
+
+.consent-checkbox input {
+  width: auto;
+  margin-top: 0.2rem;
+}
+
 .form-note {
   margin: 0.75rem 0 0;
   color: #684d4d;
@@ -334,6 +349,41 @@ button:disabled {
 
 .welcome-panel .description {
   margin-top: 1.25rem;
+}
+
+/* Componentes da central de privacidade (acoes e retorno dos dados do titular). */
+.privacy-actions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.privacy-revoke {
+  margin: 1rem 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.privacy-result {
+  margin-top: 1rem;
+  border: 1px solid #d5bcb6;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  background: #fffdfb;
+}
+
+.privacy-result h2 {
+  margin: 0 0 0.5rem;
+  font: 700 0.95rem 'Trebuchet MS', sans-serif;
+  color: #8f1c29;
+}
+
+.privacy-result pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font: 0.78rem/1.4 'Courier New', monospace;
 }
 
 @media (max-width: 480px) {
