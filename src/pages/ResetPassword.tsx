@@ -10,6 +10,8 @@ interface ResetPasswordProps {
 export function ResetPassword({ token, onVoltarAoLogin }: ResetPasswordProps) {
   const [senha, setSenha] = useState('')
   const [confirmacao, setConfirmacao] = useState('')
+  const [mostrarSenha, setMostrarSenha] = useState(false)
+  const [mostrarConfirmacao, setMostrarConfirmacao] = useState(false)
   const [erro, setErro] = useState('')
   const [sucesso, setSucesso] = useState('')
   const [carregando, setCarregando] = useState(false)
@@ -70,12 +72,22 @@ export function ResetPassword({ token, onVoltarAoLogin }: ResetPasswordProps) {
       <form onSubmit={handleSubmit} noValidate>
         <label>
           Nova senha
-          <input type="password" value={senha} onChange={(event) => setSenha(event.target.value)} autoComplete="new-password" required />
+          <span className="password-input">
+            <input type={mostrarSenha ? 'text' : 'password'} value={senha} onChange={(event) => setSenha(event.target.value)} autoComplete="new-password" required />
+            <button className="password-toggle" type="button" onClick={() => setMostrarSenha((current) => !current)} aria-label={mostrarSenha ? 'Ocultar senha' : 'Mostrar senha'}>
+              {mostrarSenha ? 'Ocultar' : 'Mostrar'}
+            </button>
+          </span>
         </label>
 
         <label>
           Confirmar nova senha
-          <input type="password" value={confirmacao} onChange={(event) => setConfirmacao(event.target.value)} autoComplete="new-password" required />
+          <span className="password-input">
+            <input type={mostrarConfirmacao ? 'text' : 'password'} value={confirmacao} onChange={(event) => setConfirmacao(event.target.value)} autoComplete="new-password" required />
+            <button className="password-toggle" type="button" onClick={() => setMostrarConfirmacao((current) => !current)} aria-label={mostrarConfirmacao ? 'Ocultar confirmação de senha' : 'Mostrar confirmação de senha'}>
+              {mostrarConfirmacao ? 'Ocultar' : 'Mostrar'}
+            </button>
+          </span>
         </label>
 
         {erro && <p className="feedback error" role="alert">{erro}</p>}

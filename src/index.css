@@ -379,11 +379,46 @@ button:disabled {
   color: #8f1c29;
 }
 
-.privacy-result pre {
+.privacy-data-list {
   margin: 0;
-  white-space: pre-wrap;
-  word-break: break-word;
-  font: 0.78rem/1.4 'Courier New', monospace;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.privacy-data-row {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 0.5rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid #f1dfd8;
+}
+
+.privacy-data-row dt {
+  margin: 0;
+  font-weight: 700;
+  color: #7a3a3f;
+}
+
+.privacy-data-row dd {
+  margin: 0;
+  color: #2d292b;
+}
+
+.privacy-consent-list {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.privacy-consent-card {
+  border: 1px solid #edd7cf;
+  border-radius: 0.45rem;
+  padding: 0.65rem;
+  background: #fff8f5;
+}
+
+.privacy-consent-card p {
+  margin: 0.25rem 0;
+  color: #3a2f30;
 }
 
 @media (max-width: 480px) {
