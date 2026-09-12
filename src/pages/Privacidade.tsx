@@ -6,7 +6,12 @@ import {
   exportarMeusDados,
   revogarConsentimento,
 } from '../services/privacidade'
-import type { DadosTitular, ExportacaoTitular } from '../types/privacidade'
+import type { DadosTitular } from '../types/privacidade'
+import {
+  formatarConsentimentos,
+  formatarDadosTitular,
+} from '../utils/privacyFormatters'
+import { downloadExportacaoTitularExcel } from '../utils/privacyExportExcel'
 
 interface PrivacidadeProps {
   email: string
@@ -17,11 +22,11 @@ interface PrivacidadeProps {
 // Centraliza os fluxos de direitos do titular (consulta, exportacao, revogacao e exclusao).
 export function Privacidade({ email, onVoltar, onContaRemovida }: PrivacidadeProps) {
   const [dados, setDados] = useState<DadosTitular | null>(null)
-  const [exportacao, setExportacao] = useState<ExportacaoTitular | null>(null)
   const [finalidade, setFinalidade] = useState('seguranca')
   const [mensagem, setMensagem] = useState('')
   const [erro, setErro] = useState('')
   const [carregando, setCarregando] = useState(false)
+  const dadosFormatados = dados ? formatarDadosTitular(dados) : null
 
   // Carrega os dados pessoais atuais do titular para conferencia em tela.
   async function handleConsultar() {
@@ -39,15 +44,15 @@ export function Privacidade({ email, onVoltar, onContaRemovida }: PrivacidadePro
     }
   }
 
-  // Dispara a exportacao completa e exibe o pacote retornado pelo backend.
+  // Gera o arquivo XLSX com os dados tratados para portabilidade do titular.
   async function handleExportar() {
     setErro('')
     setMensagem('')
     setCarregando(true)
     try {
       const payload = await exportarMeusDados(email)
-      setExportacao(payload)
-      setMensagem('Exportacao concluida com sucesso.')
+      await downloadExportacaoTitularExcel(payload)
+      setMensagem('Download da exportacao concluido com sucesso.')
     } catch (error) {
       setErro(error instanceof Error ? error.message : 'Nao foi possivel exportar os dados do titular.')
     } finally {
@@ -103,7 +108,7 @@ export function Privacidade({ email, onVoltar, onContaRemovida }: PrivacidadePro
 
       <div className="privacy-actions">
         <button type="button" onClick={handleConsultar} disabled={carregando}>Consultar meus dados</button>
-        <button type="button" onClick={handleExportar} disabled={carregando}>Exportar meus dados</button>
+        <button type="button" onClick={handleExportar} disabled={carregando}>Download</button>
       </div>
 
       <div className="privacy-revoke">
@@ -124,14 +129,38 @@ export function Privacidade({ email, onVoltar, onContaRemovida }: PrivacidadePro
       {dados && (
         <div className="privacy-result">
           <h2>Dados do titular</h2>
-          <pre>{JSON.stringify(dados, null, 2)}</pre>
-        </div>
-      )}
+          <dl className="privacy-data-list">
+            <div className="privacy-data-row">
+              <dt>Nome</dt>
+              <dd>{dadosFormatados?.nome}</dd>
+            </div>
+            <div className="privacy-data-row">
+              <dt>CPF</dt>
+              <dd>{dadosFormatados?.cpf}</dd>
+            </div>
+            <div className="privacy-data-row">
+              <dt>E-mail</dt>
+              <dd>{dadosFormatados?.email}</dd>
+            </div>
+            <div className="privacy-data-row">
+              <dt>Perfil</dt>
+              <dd>{dadosFormatados?.perfil}</dd>
+            </div>
+          </dl>
 
-      {exportacao && (
-        <div className="privacy-result">
-          <h2>Exportacao</h2>
-          <pre>{JSON.stringify(exportacao, null, 2)}</pre>
+          <h2>Consentimentos</h2>
+          <div className="privacy-consent-list">
+            {formatarConsentimentos(dados.consentimentos).map((item) => (
+              <article key={`${item.finalidade}-${item.versaoTermo}`} className="privacy-consent-card">
+                <p><strong>Finalidade:</strong> {item.finalidade}</p>
+                <p><strong>Versao:</strong> {item.versaoTermo}</p>
+                <p><strong>Base legal:</strong> {item.baseLegal}</p>
+                <p><strong>Status:</strong> {item.status}</p>
+                <p><strong>Concedido em:</strong> {item.concedidoEm}</p>
+                <p><strong>Revogado em:</strong> {item.revogadoEm}</p>
+              </article>
+            ))}
+          </div>
         </div>
       )}
 

@@ -10,13 +10,10 @@ export interface Consentimento {
 
 // Resposta principal de consulta LGPD do proprio titular autenticado.
 export interface DadosTitular {
-  id: number
   nome: string
   cpf: string
   email: string
   perfil: string
-  status: string
-  hemocentro_id: number | null
   consentimentos: Consentimento[]
 }
 
