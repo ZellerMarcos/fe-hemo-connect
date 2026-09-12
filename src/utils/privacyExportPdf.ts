@@ -1,7 +1,14 @@
-import PDFDocument from 'pdfkit'
+import * as PDFKit from 'pdfkit'
+import Helvetica from 'pdfkit/standard-fonts/Helvetica'
 
 import type { ExportacaoTitular } from '../types/privacidade'
 import { formatarConsentimentos, formatarDadosTitular, formatarDataHora } from './privacyFormatters'
+
+const PDFDocument = PDFKit.default
+const registerStdFonts = (PDFKit as unknown as { registerStdFonts?: (...fonts: unknown[]) => void }).registerStdFonts
+if (registerStdFonts) {
+  registerStdFonts(Helvetica)
+}
 
 function baixarArquivo(blob: Blob, fileName: string): void {
   const url = URL.createObjectURL(blob)
