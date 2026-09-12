@@ -11,7 +11,7 @@ import {
   formatarConsentimentos,
   formatarDadosTitular,
 } from '../utils/privacyFormatters'
-import { downloadExportacaoTitularExcel } from '../utils/privacyExportExcel'
+import { downloadExportacaoTitularPdf } from '../utils/privacyExportPdf'
 
 interface PrivacidadeProps {
   email: string
@@ -45,15 +45,15 @@ export function Privacidade({ email, onVoltar, onContaRemovida, embedded = false
     }
   }
 
-  // Gera o arquivo XLSX com os dados tratados para portabilidade do titular.
+  // Gera o arquivo PDF com os dados tratados para portabilidade do titular.
   async function handleExportar() {
     setErro('')
     setMensagem('')
     setCarregando(true)
     try {
       const payload = await exportarMeusDados(email)
-      await downloadExportacaoTitularExcel(payload)
-      setMensagem('Download da exportacao concluido com sucesso.')
+      await downloadExportacaoTitularPdf(payload)
+      setMensagem('Download do PDF concluido com sucesso.')
     } catch (error) {
       setErro(error instanceof Error ? error.message : 'Nao foi possivel exportar os dados do titular.')
     } finally {
