@@ -15,12 +15,13 @@ import { downloadExportacaoTitularExcel } from '../utils/privacyExportExcel'
 
 interface PrivacidadeProps {
   email: string
-  onVoltar: () => void
   onContaRemovida: () => void
+  onVoltar?: () => void
+  embedded?: boolean
 }
 
 // Centraliza os fluxos de direitos do titular (consulta, exportacao, revogacao e exclusao).
-export function Privacidade({ email, onVoltar, onContaRemovida }: PrivacidadeProps) {
+export function Privacidade({ email, onVoltar, onContaRemovida, embedded = false }: PrivacidadeProps) {
   const [dados, setDados] = useState<DadosTitular | null>(null)
   const [finalidade, setFinalidade] = useState('seguranca')
   const [mensagem, setMensagem] = useState('')
@@ -99,7 +100,7 @@ export function Privacidade({ email, onVoltar, onContaRemovida }: PrivacidadePro
   }
 
   return (
-    <section className="auth-panel" aria-labelledby="privacy-title">
+    <section className={embedded ? 'privacy-embedded' : 'auth-panel'} aria-labelledby="privacy-title">
       <div className="panel-heading">
         <p className="eyebrow">Privacidade</p>
         <h1 id="privacy-title">Direitos do titular</h1>
@@ -164,7 +165,9 @@ export function Privacidade({ email, onVoltar, onContaRemovida }: PrivacidadePro
         </div>
       )}
 
-      <button className="text-button" type="button" onClick={onVoltar}>Voltar</button>
+      {onVoltar && (
+        <button className="text-button" type="button" onClick={onVoltar}>Voltar</button>
+      )}
     </section>
   )
 }

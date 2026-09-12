@@ -4,6 +4,7 @@ export const ROUTES = {
   forgotPassword: '/auth/forgot-password',
   resetPassword: '/reset-password',
   home: '/home',
+  perfil: '/perfil',
   cadastro: '/cadastro',
   // Rota da central de privacidade com funcionalidades LGPD do titular.
   privacidade: '/privacidade',
@@ -15,6 +16,7 @@ export const PAGE_INFO = {
   forgotPassword: { name: 'Esqueci minha senha', path: ROUTES.forgotPassword },
   resetPassword: { name: 'Redefinir Senha', path: ROUTES.resetPassword },
   home: { name: 'Home Page', path: ROUTES.home },
+  perfil: { name: 'Meu Perfil', path: ROUTES.perfil },
   cadastro: { name: 'Cadastro', path: ROUTES.cadastro },
   privacidade: { name: 'Privacidade', path: ROUTES.privacidade },
 } as const
