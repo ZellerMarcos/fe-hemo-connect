@@ -3,13 +3,20 @@ import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-
 import { Cadastro } from './pages/Cadastro'
 import { ForgotPassword } from './pages/ForgotPassword'
 import { Login } from './pages/Login'
+import { Privacidade } from './pages/Privacidade'
 import { ResetPassword } from './pages/ResetPassword'
 import { TwoFactor } from './pages/TwoFactor'
 import type { LoginUserResponse } from './types/auth'
 
 const MENSAGEM_SESSAO_EXPIRADA = 'Sua sessao expirou, realize novamente seu login'
 
-function AuthenticatedHome({ usuario }: { usuario: LoginUserResponse }) {
+function AuthenticatedHome({
+  usuario,
+  onAbrirPrivacidade,
+}: {
+  usuario: LoginUserResponse
+  onAbrirPrivacidade: () => void
+}) {
   return (
     <main className="page-shell">
       <section className="welcome-panel dashboard-panel" aria-labelledby="welcome-title">
@@ -19,6 +26,8 @@ function AuthenticatedHome({ usuario }: { usuario: LoginUserResponse }) {
         <div className="dashboard-grid">
           <button type="button" className="dashboard-card"><span className="card-title">Marcar doacao</span><span className="card-description">Agende sua próxima doação.</span></button>
           <button type="button" className="dashboard-card"><span className="card-title">Meu Perfil</span><span className="card-description">Visualize e atualize seus dados.</span></button>
+          {/* Atalho da area logada para os direitos LGPD do titular. */}
+          <button type="button" className="dashboard-card" onClick={onAbrirPrivacidade}><span className="card-title">Privacidade e LGPD</span><span className="card-description">Consulte, exporte e gerencie consentimentos.</span></button>
           <button type="button" className="dashboard-card"><span className="card-title">Histórico de Doacoes</span><span className="card-description">Acompanhe suas contribuições.</span></button>
         </div>
       </section>
@@ -86,7 +95,9 @@ function App() {
       <Route path="/cadastro" element={<main className="page-shell"><Cadastro onCadastroSucesso={() => navigate('/login')} onIrParaLogin={() => navigate('/login')} /></main>} />
       <Route path="/two-factor" element={<main className="page-shell"><TwoFactor email={twoFactorEmail} onSucesso={handleTwoFactorSuccess} onVoltar={() => { setTwoFactorEmail(''); navigate('/login') }} /></main>} />
       <Route path="/index.html" element={<ResetPasswordEntry />} />
-      <Route path="/home" element={usuario ? <AuthenticatedHome usuario={usuario} /> : <Navigate to="/login" replace />} />
+      <Route path="/home" element={usuario ? <AuthenticatedHome usuario={usuario} onAbrirPrivacidade={() => navigate('/privacidade')} /> : <Navigate to="/login" replace />} />
+      {/* Rota protegida da central de privacidade; sem sessao ativa redireciona para login. */}
+      <Route path="/privacidade" element={usuario ? <main className="page-shell"><Privacidade email={usuario.email} onVoltar={() => navigate('/home')} onContaRemovida={() => { setUsuario(null); navigate('/login', { replace: true }) }} /></main> : <Navigate to="/login" replace />} />
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   )

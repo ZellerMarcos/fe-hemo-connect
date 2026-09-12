@@ -11,6 +11,9 @@ export interface CadastroUsuario {
   perfil: UsuarioPerfil
   status: UsuarioStatus
   hemocentro_id: null
+  consentimento_aceito: boolean
+  consentimento_versao: string
+  consentimento_finalidades: string[]
 }
 
 // A resposta pública do backend expõe os dados básicos do usuário sem expor informações privadas sensíveis.

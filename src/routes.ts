@@ -5,6 +5,8 @@ export const ROUTES = {
   resetPassword: '/reset-password',
   home: '/home',
   cadastro: '/cadastro',
+  // Rota da central de privacidade com funcionalidades LGPD do titular.
+  privacidade: '/privacidade',
 } as const
 
 export const PAGE_INFO = {
@@ -14,6 +16,7 @@ export const PAGE_INFO = {
   resetPassword: { name: 'Redefinir Senha', path: ROUTES.resetPassword },
   home: { name: 'Home Page', path: ROUTES.home },
   cadastro: { name: 'Cadastro', path: ROUTES.cadastro },
+  privacidade: { name: 'Privacidade', path: ROUTES.privacidade },
 } as const
 
 export const PAGE_NAMES = Object.values(PAGE_INFO).map((page) => page.name)
