@@ -1,4 +1,9 @@
 import { FormEvent, useState } from 'react'
+
+import { ArrowRight, LogIn, Mail, Shield } from 'lucide-react'
+
+import { Button } from '../components/ui/button'
+import { Input } from '../components/ui/input'
 import { entrar } from '../services/auth'
 import type { LoginUserResponse } from '../types/auth'
 
@@ -47,24 +52,44 @@ export function Login({ onLoginSucesso, onTwoFactor, onIrParaCadastro, onEsqueci
   }
 
   return (
-    <section className="auth-panel" aria-labelledby="login-title">
-      <div className="panel-heading">
-        <p className="eyebrow">Hemo Connect</p>
-        <h1 id="login-title">Bem-vindo de volta</h1>
-        <p>Entre para acompanhar suas doações.</p>
+    <section className="w-full max-w-lg rounded-2xl border border-red-100 bg-white/92 p-6 shadow-2xl shadow-red-100/40 md:p-8" aria-labelledby="login-title">
+      <div>
+        <p className="text-xs font-bold uppercase tracking-[0.16em] text-red-700">Hemo Connect</p>
+        <h1 id="login-title" className="mt-3 text-3xl font-semibold text-zinc-900 md:text-4xl">Bem-vindo de volta</h1>
+        <p className="mt-3 text-sm leading-relaxed text-zinc-600 md:text-base">Entre para acompanhar suas doações.</p>
       </div>
       {mensagemSessaoExpirada && (
         // A mensagem de expiração é exibida somente quando o backend rejeitou a sessão por timeout.
-        <p className="feedback error session-expired-message" role="alert">{mensagemSessaoExpirada}</p>
+        <p className="mt-4 rounded-xl bg-red-100 px-3 py-2 text-sm text-red-800" role="alert">{mensagemSessaoExpirada}</p>
       )}
-      <form onSubmit={handleSubmit} noValidate>
-        <label>E-mail<input type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" required /></label>
-        <label>Senha<input type="password" value={senha} onChange={(event) => setSenha(event.target.value)} autoComplete="current-password" required /></label>
-        {erro && <p className="feedback error" role="alert">{erro}</p>}
-        <button type="submit" disabled={carregando}>{carregando ? 'Entrando...' : 'Entrar'}</button>
+      <form onSubmit={handleSubmit} noValidate className="mt-6 grid gap-4">
+        <label className="grid gap-2 text-sm font-semibold text-zinc-700">
+          E-mail
+          <div className="relative">
+            <Mail size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
+            <Input type="email" className="pl-9" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" required />
+          </div>
+        </label>
+        <label className="grid gap-2 text-sm font-semibold text-zinc-700">
+          Senha
+          <div className="relative">
+            <Shield size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
+            <Input type="password" className="pl-9" value={senha} onChange={(event) => setSenha(event.target.value)} autoComplete="current-password" required />
+          </div>
+        </label>
+        {erro && <p className="rounded-xl bg-red-100 px-3 py-2 text-sm text-red-800" role="alert">{erro}</p>}
+        <Button type="submit" disabled={carregando}>
+          <LogIn size={16} />
+          {carregando ? 'Entrando...' : 'Entrar'}
+        </Button>
       </form>
-      <button className="text-button" type="button" onClick={onEsqueciSenha}>Esqueci minha senha</button>
-      <button className="text-button" type="button" onClick={onIrParaCadastro}>Criar uma conta</button>
+      <div className="mt-4 grid gap-2">
+        <Button variant="ghost" type="button" onClick={onEsqueciSenha}>Esqueci minha senha</Button>
+        <Button variant="secondary" type="button" onClick={onIrParaCadastro}>
+          Criar uma conta
+          <ArrowRight size={16} />
+        </Button>
+      </div>
     </section>
   )
 }

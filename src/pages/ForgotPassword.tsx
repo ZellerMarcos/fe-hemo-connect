@@ -1,4 +1,9 @@
 import { FormEvent, useState } from 'react'
+
+import { ArrowLeft, MailCheck } from 'lucide-react'
+
+import { Button } from '../components/ui/button'
+import { Input } from '../components/ui/input'
 import { solicitarResetSenha } from '../services/auth'
 
 interface ForgotPasswordProps {
@@ -37,30 +42,32 @@ export function ForgotPassword({ onVoltarAoLogin }: ForgotPasswordProps) {
   }
 
   return (
-    <section className="auth-panel" aria-labelledby="forgot-password-title">
-      <div className="panel-heading">
-        <p className="eyebrow">Hemo Connect</p>
-        <h1 id="forgot-password-title">Recuperar senha</h1>
-        <p>Informe o e-mail para receber o link de redefinição.</p>
+    <section className="w-full max-w-lg rounded-2xl border border-red-100 bg-white/92 p-6 shadow-2xl shadow-red-100/40 md:p-8" aria-labelledby="forgot-password-title">
+      <div>
+        <p className="text-xs font-bold uppercase tracking-[0.16em] text-red-700">Hemo Connect</p>
+        <h1 id="forgot-password-title" className="mt-3 text-3xl font-semibold text-zinc-900 md:text-4xl">Recuperar senha</h1>
+        <p className="mt-3 text-sm leading-relaxed text-zinc-600 md:text-base">Informe o e-mail para receber o link de redefinição.</p>
       </div>
 
-      <form onSubmit={handleSubmit} noValidate>
-        <label>
+      <form onSubmit={handleSubmit} noValidate className="mt-6 grid gap-4">
+        <label className="grid gap-2 text-sm font-semibold text-zinc-700">
           E-mail
-          <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" required />
+          <Input type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" required />
         </label>
 
-        {erro && <p className="feedback error" role="alert">{erro}</p>}
-        {sucesso && <p className="feedback success" role="status">{sucesso}</p>}
+        {erro && <p className="rounded-xl bg-red-100 px-3 py-2 text-sm text-red-800" role="alert">{erro}</p>}
+        {sucesso && <p className="rounded-xl bg-emerald-100 px-3 py-2 text-sm text-emerald-800" role="status">{sucesso}</p>}
 
-        <button type="submit" disabled={carregando}>
+        <Button type="submit" disabled={carregando}>
+          <MailCheck size={16} />
           {carregando ? 'Enviando...' : 'Enviar link'}
-        </button>
+        </Button>
       </form>
 
-      <button className="text-button" type="button" onClick={onVoltarAoLogin}>
+      <Button className="mt-4" variant="ghost" type="button" onClick={onVoltarAoLogin}>
+        <ArrowLeft size={16} />
         Voltar para o login
-      </button>
+      </Button>
     </section>
   )
 }

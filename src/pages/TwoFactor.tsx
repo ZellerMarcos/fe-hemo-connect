@@ -1,4 +1,9 @@
 import { FormEvent, useEffect, useRef, useState } from 'react'
+
+import { ArrowLeft, ShieldCheck } from 'lucide-react'
+
+import { Button } from '../components/ui/button'
+import { Input } from '../components/ui/input'
 import { verifyTwoFactor } from '../services/auth'
 
 interface TwoFactorProps {
@@ -48,17 +53,18 @@ export function TwoFactor({ email, onSucesso, onVoltar }: TwoFactorProps) {
   }
 
   return (
-    <section className="auth-panel" aria-labelledby="two-factor-title">
-      <div className="panel-heading">
-        <p className="eyebrow">Hemo Connect</p>
-        <h1 id="two-factor-title">Verificação</h1>
-        <p>Enviamos um código de 6 dígitos para o seu e-mail.</p>
-        <p>Verifique sua caixa de entrada e Spam.</p>
+    <section className="w-full max-w-lg rounded-2xl border border-red-100 bg-white/92 p-6 shadow-2xl shadow-red-100/40 md:p-8" aria-labelledby="two-factor-title">
+      <div>
+        <p className="text-xs font-bold uppercase tracking-[0.16em] text-red-700">Hemo Connect</p>
+        <h1 id="two-factor-title" className="mt-3 text-3xl font-semibold text-zinc-900 md:text-4xl">Verificação</h1>
+        <p className="mt-3 text-sm leading-relaxed text-zinc-600 md:text-base">Enviamos um código de 6 dígitos para o seu e-mail.</p>
+        <p className="mt-1 text-sm text-zinc-500">Verifique sua caixa de entrada e Spam.</p>
       </div>
-      <form onSubmit={handleSubmit} noValidate>
-        <label>
+
+      <form onSubmit={handleSubmit} noValidate className="mt-6 grid gap-4">
+        <label className="grid gap-2 text-sm font-semibold text-zinc-700">
           Código
-          <input
+          <Input
             ref={codeInputRef}
             value={code}
             onChange={(event) => setCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
@@ -70,12 +76,16 @@ export function TwoFactor({ email, onSucesso, onVoltar }: TwoFactorProps) {
             required
           />
         </label>
-        {erro && <p className="feedback error" id="two-factor-error" role="alert">{erro}</p>}
-        <button type="submit" disabled={carregando}>
+
+        {erro && <p className="rounded-xl bg-red-100 px-3 py-2 text-sm text-red-800" id="two-factor-error" role="alert">{erro}</p>}
+
+        <Button type="submit" disabled={carregando}>
+          <ShieldCheck size={16} />
           {carregando ? 'Confirmando...' : 'Confirmar'}
-        </button>
+        </Button>
       </form>
-      <button className="text-button" type="button" onClick={onVoltar}>Voltar para o login</button>
+
+      <Button className="mt-4" variant="ghost" type="button" onClick={onVoltar}><ArrowLeft size={16} />Voltar para o login</Button>
     </section>
   )
 }
