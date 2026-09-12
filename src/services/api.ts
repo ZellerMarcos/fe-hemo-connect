@@ -1,4 +1,25 @@
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://127.0.0.1:8000'
+function resolveApiUrl(): string {
+  const configuredUrl = import.meta.env.VITE_API_URL?.trim()
+  if (!configuredUrl) {
+    throw new Error('VITE_API_URL deve ser definida para executar o frontend.')
+  }
+
+  const normalized = configuredUrl.replace(/\/+$/, '')
+  const parsed = new URL(normalized)
+  const isLocalHost = parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1'
+
+  if (import.meta.env.PROD && parsed.protocol !== 'https:') {
+    throw new Error('VITE_API_URL deve usar HTTPS em produção.')
+  }
+
+  if (!import.meta.env.PROD && parsed.protocol !== 'https:' && !isLocalHost) {
+    throw new Error('Ambiente de desenvolvimento permite HTTP apenas para localhost/127.0.0.1.')
+  }
+
+  return normalized
+}
+
+const API_URL = resolveApiUrl()
 
 // A função request centraliza a comunicação HTTP da aplicação, padronizando URL base, headers e tratamento de erros do backend.
 export async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
