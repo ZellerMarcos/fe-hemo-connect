@@ -1,6 +1,6 @@
 import { FormEvent, useState } from 'react'
 
-import { ArrowRight, LogIn, Mail, Shield } from 'lucide-react'
+import { KeyRound, LifeBuoy, LogIn, MailCheck, UserPlus2 } from 'lucide-react'
 
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
@@ -66,14 +66,14 @@ export function Login({ onLoginSucesso, onTwoFactor, onIrParaCadastro, onEsqueci
         <label className="grid gap-2 text-sm font-semibold text-zinc-700">
           E-mail
           <div className="relative">
-            <Mail size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
+            <MailCheck size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
             <Input type="email" className="pl-9" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" required />
           </div>
         </label>
         <label className="grid gap-2 text-sm font-semibold text-zinc-700">
           Senha
           <div className="relative">
-            <Shield size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
+            <KeyRound size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
             <Input type="password" className="pl-9" value={senha} onChange={(event) => setSenha(event.target.value)} autoComplete="current-password" required />
           </div>
         </label>
@@ -84,10 +84,13 @@ export function Login({ onLoginSucesso, onTwoFactor, onIrParaCadastro, onEsqueci
         </Button>
       </form>
       <div className="mt-4 grid gap-2">
-        <Button variant="ghost" type="button" onClick={onEsqueciSenha}>Esqueci minha senha</Button>
+        <Button variant="ghost" type="button" onClick={onEsqueciSenha}>
+          <LifeBuoy size={16} />
+          Esqueci minha senha
+        </Button>
         <Button variant="secondary" type="button" onClick={onIrParaCadastro}>
+          <UserPlus2 size={16} />
           Criar uma conta
-          <ArrowRight size={16} />
         </Button>
       </div>
     </section>
