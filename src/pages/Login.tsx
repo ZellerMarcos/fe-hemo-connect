@@ -64,17 +64,21 @@ export function Login({ onLoginSucesso, onTwoFactor, onIrParaCadastro, onEsqueci
       )}
       <form onSubmit={handleSubmit} noValidate className="mt-6 grid gap-4">
         <label className="grid gap-2 text-sm font-semibold text-zinc-700">
-          E-mail
-          <div className="relative">
-            <MailCheck size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
-            <Input type="email" className="pl-9" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" required />
+          <span className="inline-flex items-center gap-2">
+            <MailCheck size={16} className="text-zinc-500" />
+            E-mail
+          </span>
+          <div>
+            <Input type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" required />
           </div>
         </label>
         <label className="grid gap-2 text-sm font-semibold text-zinc-700">
-          Senha
-          <div className="relative">
-            <KeyRound size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
-            <Input type="password" className="pl-9" value={senha} onChange={(event) => setSenha(event.target.value)} autoComplete="current-password" required />
+          <span className="inline-flex items-center gap-2">
+            <KeyRound size={16} className="text-zinc-500" />
+            Senha
+          </span>
+          <div>
+            <Input type="password" value={senha} onChange={(event) => setSenha(event.target.value)} autoComplete="current-password" required />
           </div>
         </label>
         {erro && <p className="rounded-xl bg-red-100 px-3 py-2 text-sm text-red-800" role="alert">{erro}</p>}
