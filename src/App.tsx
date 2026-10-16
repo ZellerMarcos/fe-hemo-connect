@@ -19,6 +19,7 @@ import { Recepcao } from './pages/Recepcao'
 import { TriagemEnfermagem } from './pages/TriagemEnfermagem'
 import { UsersApprove } from './pages/UsersApprove'
 import { Hemocentros } from './pages/Hemocentros'
+import { HemocentrosDoador } from './pages/HemocentrosDoador'
 import { AgendaHemocentro } from './pages/AgendaHemocentro'
 import { HorariosHemocentro } from './pages/HorariosHemocentro'
 import { confirmarNavegacao } from './hooks/useUnsavedChanges'
@@ -31,11 +32,13 @@ function AuthenticatedHome({
   usuario,
   onAbrirPerfil,
   onAgendamentos,
+  onHemocentros,
   onSair,
 }: {
   usuario: LoginUserResponse
   onAbrirPerfil: () => void
   onAgendamentos: () => void
+  onHemocentros: () => void
   onSair: () => void
 }) {
   const cards = [
@@ -55,9 +58,9 @@ function AuthenticatedHome({
     },
     {
       title: 'Hemocentros',
-      description: 'Consulte unidades, endereços e horários de atendimento.',
+      description: 'Consulte unidades, endereços, contatos e vagas para doação.',
       icon: Building2,
-      action: undefined,
+      action: onHemocentros,
       color: 'centros',
     },
   ]
@@ -224,13 +227,13 @@ function App() {
       <Route path="/cadastro" element={<AuthFrame><Cadastro onCadastroSucesso={() => navigate('/login')} onIrParaLogin={() => navigate('/login')} /></AuthFrame>} />
       <Route path="/two-factor" element={twoFactorEmail ? <AuthFrame><TwoFactor email={twoFactorEmail} onSucesso={handleLoginSucesso} onVoltar={() => { setTwoFactorEmail(''); navigate('/login') }} /></AuthFrame> : <Navigate to="/login" replace />} />
       <Route path="/index.html" element={<ResetPasswordEntry />} />
-      <Route path="/home" element={usuario ? nurseArea ? <Navigate to="/enfermeiro" replace /> : receptionArea ? <Navigate to="/recepcao" replace /> : usuario.perfil === 'DOADOR' ? <AuthenticatedHome usuario={usuario} onAbrirPerfil={abrirPerfil} onAgendamentos={() => navigate('/agendamentos')} onSair={() => void handleLogout()} /> : area('Área profissional', <p>O módulo do seu perfil não está disponível nesta versão.</p>) : <Navigate to="/login" replace />} />
+      <Route path="/home" element={usuario ? nurseArea ? <Navigate to="/enfermeiro" replace /> : receptionArea ? <Navigate to="/recepcao" replace /> : usuario.perfil === 'DOADOR' ? <AuthenticatedHome usuario={usuario} onAbrirPerfil={abrirPerfil} onAgendamentos={() => navigate('/agendamentos')} onHemocentros={abrirHemocentros} onSair={() => void handleLogout()} /> : area('Área profissional', <p>O módulo do seu perfil não está disponível nesta versão.</p>) : <Navigate to="/login" replace />} />
       <Route path="/enfermeiro" element={nurseArea ? area('Triagem de Doadores', <Enfermagem />) : acessoNegado} />
       <Route path="/enfermeiro/triagens" element={nurseArea ? area('Triagem de Doadores', <Enfermagem />) : acessoNegado} />
       <Route path="/enfermeiro/triagens/:id" element={nurseArea && usuario ? area('Atendimento de enfermagem', <TriagemEnfermagem usuario={usuario} />) : acessoNegado} />
       <Route path="/recepcao" element={receptionArea ? area('Recepção de Doadores', <Recepcao />) : acessoNegado} />
       <Route path="/users-approve" element={usuario?.perfil === 'ADMINISTRADOR' ? area('Aprovação de enfermeiros', <UsersApprove />) : acessoNegado} />
-      <Route path="/hemocentros" element={usuario && ['ADMINISTRADOR', 'ENFERMEIRO'].includes(usuario.perfil) ? area('Hemocentros', <Hemocentros />) : acessoNegado} />
+      <Route path="/hemocentros" element={usuario?.perfil === 'DOADOR' ? area('Hemocentros', <HemocentrosDoador />) : usuario && ['ADMINISTRADOR', 'ENFERMEIRO'].includes(usuario.perfil) ? area('Hemocentros', <Hemocentros />) : acessoNegado} />
       <Route path="/agenda" element={usuario && ['ADMINISTRADOR', 'RESPONSAVEL_HEMOCENTRO'].includes(usuario.perfil) ? area('Agenda da unidade', <AgendaHemocentro usuario={usuario} />) : acessoNegado} />
       <Route path="/hemocentros/:id/horarios" element={usuario ? area('Horários da unidade', <HorariosHemocentro />) : acessoNegado} />
       <Route path="/agendamentos" element={usuario?.perfil === 'DOADOR' ? area('Agendamentos e histórico', <Agendamentos />) : acessoNegado} />

@@ -158,6 +158,29 @@ a pagina; o seletor de horarios oferece estados de carregamento, vazio e erro.
 
 ## Seguranca
 
+### Hemocentros para o doador
+
+O atalho **Hemocentros** da central e a navegação da área logada abrem uma visão
+somente de consulta para o doador autenticado. Administradores e enfermeiros
+continuam acessando a página administrativa existente.
+
+A lista mostra nome, endereço, telefone e situação de todas as unidades. A busca
+por nome/endereço não diferencia acentos ou maiúsculas; telefones válidos para
+discagem oferecem um link `tel:`. Unidades inativas não oferecem agendamento.
+
+Para unidades ativas, a página verifica as vagas nos **próximos 7 dias**, no fuso
+de cada unidade. **Agendar doação neste local** é liberado somente quando a
+consulta retorna vagas; sem agenda, sem vagas na semana ou em caso de erro, o
+botão fica indisponível. Falhas podem ser consultadas novamente. A lista não
+afirma ausência de vagas em semanas posteriores: outras semanas podem ser
+consultadas em Agendamentos pela central. As vagas são revalidadas na confirmação.
+
+O botão abre `/agendamentos?hemocentro_id=ID`. A unidade é validada pela lista
+autenticada e pré-selecionada, mas pode ser trocada normalmente. Links inválidos,
+duplicados, inexistentes ou com unidade inativa apresentam uma mensagem e permitem
+escolher outra unidade. O link não cria hemocentro nem confirma reserva; ainda
+é necessário escolher dia/horário e preencher/revisar a pré-triagem.
+
 ### Formulário de pré-triagem no agendamento
 
 Novas reservas exigem o formulário estruturado e as confirmações do catálogo
