@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 
 import { Button } from '../components/ui/button'
 import { ConfirmarCancelamentoModal } from '../components/ConfirmarCancelamentoModal'
@@ -20,10 +20,10 @@ import { confirmarNavegacao, useUnsavedChanges } from '../hooks/useUnsavedChange
 
 export function Agendamentos() {
   const navigate = useNavigate()
+  const [parametros, setParametros] = useSearchParams()
   const [centros, setCentros] = useState<Hemocentro[]>([])
   const [agendas, setAgendas] = useState<Reserva[]>([])
   const [historico, setHistorico] = useState<HistoricoItem[]>([])
-  const [centro, setCentro] = useState('')
   const [horario, setHorario] = useState<HorarioDisponivel | null>(null)
   const [fusoHorario, setFusoHorario] = useState<string | null>(null)
   const [respostas, setRespostas] = useState<RespostasQuestionario>({})
@@ -48,6 +48,19 @@ export function Agendamentos() {
   const [remarcando, setRemarcando] = useState<Reserva | null>(null)
   const [reservaCancelando, setReservaCancelando] = useState<Reserva | null>(null)
   const requisicao = useRef<{ conteudo: string; chave: string } | null>(null)
+
+  const idsIndicados = parametros.getAll('hemocentro_id')
+  const idIndicado = idsIndicados.length === 1 && /^[1-9]\d*$/.test(idsIndicados[0])
+    && Number.isSafeInteger(Number(idsIndicados[0])) ? idsIndicados[0] : ''
+  const unidadeIndicada = centros.find(item => String(item.id) === idIndicado)
+  const centro = remarcando ? String(remarcando.hemocentro_id)
+    : unidadeIndicada?.status === 'ATIVO' ? idIndicado : ''
+  const erroUnidadeIndicada = !remarcando && !carregando && !erroDados && idsIndicados.length > 0
+    ? !idIndicado ? 'O link contém um identificador de hemocentro inválido. Escolha uma unidade abaixo.'
+      : !unidadeIndicada ? 'O hemocentro indicado não foi encontrado. Escolha outra unidade.'
+        : unidadeIndicada.status !== 'ATIVO' ? 'O hemocentro indicado está inativo. Escolha outra unidade.'
+          : ''
+    : ''
 
   const estadoFormulario = JSON.stringify({ respostas, confirmacoes })
   const formularioSujo = baselineFormulario !== null && baselineFormulario !== estadoFormulario
@@ -106,6 +119,13 @@ export function Agendamentos() {
     const controller = new AbortController()
     requisicaoRespostaAnterior.current = controller
     async function carregarRespostaAnterior() {
+      setEstadoRespostaAnterior('loading')
+      setErroRespostaAnterior('')
+      setAvisoRespostaAnterior('')
+      setRespostas({})
+      setConfirmacoes([])
+      setBaselineFormulario(null)
+      requisicao.current = null
       try {
         const anterior = await consultarUltimaResposta(Number(centro), controller.signal)
         if (controller.signal.aborted) return
@@ -174,17 +194,26 @@ export function Agendamentos() {
 
   function encerrarRemarcacao() {
     setRemarcando(null)
-    setCentro('')
+    atualizarUnidadeUrl('')
     escolherHorario(null)
     setEstadoRespostaAnterior('idle')
     requisicao.current = null
   }
 
+  function atualizarUnidadeUrl(id: string) {
+    setParametros(anteriores => {
+      const proximos = new URLSearchParams(anteriores)
+      if (id) proximos.set('hemocentro_id', id)
+      else proximos.delete('hemocentro_id')
+      return proximos
+    }, { replace: true })
+  }
+
   function selecionarCentro(novoCentro: string) {
-    if (novoCentro === centro) return
+    if (novoCentro === centro && !erroUnidadeIndicada) return
     if (formularioSujo && !window.confirm('Trocar de hemocentro descartará as respostas e confirmações editadas. Deseja continuar?')) return
     requisicaoRespostaAnterior.current?.abort()
-    setCentro(novoCentro)
+    atualizarUnidadeUrl(novoCentro)
     escolherHorario(null)
     setRespostas({})
     setConfirmacoes([])
@@ -302,6 +331,7 @@ export function Agendamentos() {
         <p>Informe à equipe qualquer mudança de saúde desde o preenchimento original.</p>
         <Button variant="secondary" disabled={ocupado} onClick={encerrarRemarcacao}>Desistir da remarcação</Button>
       </aside>}
+      {erroUnidadeIndicada && <p role="alert" className="rounded-xl bg-amber-50 p-4 text-amber-900">{erroUnidadeIndicada}</p>}
       <label className="grid min-w-0 gap-2">Hemocentro
         <select id="hemocentro-reserva" required disabled={ocupado || carregando || !!erroDados || !!remarcando}
           className="min-h-11 w-full min-w-0 rounded-xl border border-red-200 bg-white p-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300"
@@ -370,7 +400,7 @@ export function Agendamentos() {
                   setBaselineFormulario(null)
                 }
                 requisicaoRespostaAnterior.current?.abort()
-                setRemarcando(item); setCentro(String(item.hemocentro_id)); escolherHorario(null)
+                setRemarcando(item); atualizarUnidadeUrl(''); escolherHorario(null)
                 setEstadoRespostaAnterior('idle'); setErroAcao(''); setMensagem(''); requisicao.current = null
               }}>Remarcar</Button>
               <Button variant="ghost" disabled={ocupado || !item.pode_cancelar} onClick={() => setReservaCancelando(item)}>Cancelar reserva</Button>

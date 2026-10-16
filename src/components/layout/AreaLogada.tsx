@@ -27,7 +27,7 @@ export function AreaLogada({ usuario, titulo, children, onPerfil, onSair, onApro
           </div>
           <nav aria-label="Conta" className="flex flex-wrap gap-2">
             {['ADMINISTRADOR', 'RESPONSAVEL_HEMOCENTRO'].includes(usuario.perfil) && onAgenda && <Button variant="secondary" onClick={onAgenda}>Gerenciar agendas</Button>}
-            {['ADMINISTRADOR', 'ENFERMEIRO'].includes(usuario.perfil) && onHemocentros && <Button variant="secondary" onClick={onHemocentros}>Hemocentros</Button>}
+            {['DOADOR', 'ADMINISTRADOR', 'ENFERMEIRO'].includes(usuario.perfil) && onHemocentros && <Button variant="secondary" onClick={onHemocentros}>Hemocentros</Button>}
             {usuario.perfil === 'ADMINISTRADOR' && onAprovacoes && <Button variant="secondary" onClick={onAprovacoes}>Aprovar enfermeiros</Button>}
             <Button variant="secondary" onClick={onPerfil}>Meu perfil</Button>
             <Button variant="ghost" onClick={onSair}>Sair</Button>
