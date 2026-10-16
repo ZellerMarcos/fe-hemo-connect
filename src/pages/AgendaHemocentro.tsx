@@ -8,6 +8,7 @@ import { listarHemocentros } from '../services/hemocentros'
 import type { AgendaConfig, AgendaResponse, ExcecaoAgenda } from '../types/agenda'
 import type { LoginUserResponse } from '../types/auth'
 import type { Hemocentro } from '../types/hemocentro'
+import { validarAgendaConfig } from '../utils/agendaValidation'
 import { dataAtendimento, mensagemErro } from '../utils/triagemFormatters'
 import { useUnsavedChanges } from '../hooks/useUnsavedChanges'
 
@@ -113,10 +114,9 @@ export function AgendaHemocentro({ usuario }: { usuario: LoginUserResponse }) {
     if (!config || salvando) return
     setErro('')
     setMensagem('')
-    const invalido = NUMEROS.find(item => !Number.isInteger(config[item.key]) || config[item.key] < item.min || config[item.key] > item.max)
-    if (invalido || config.periodos.length === 0 || config.excecoes.some(item => !item.data)) {
-      setErro(invalido ? `${invalido.label}: informe um inteiro entre ${invalido.min} e ${invalido.max}.`
-        : 'Cadastre ao menos um período semanal e preencha a data de todas as exceções.')
+    const validationErrors = validarAgendaConfig(config)
+    if (validationErrors.length > 0) {
+      setErro(validationErrors.join('\n'))
       return
     }
     setSalvando(true)
@@ -147,7 +147,7 @@ export function AgendaHemocentro({ usuario }: { usuario: LoginUserResponse }) {
     </label>
     {carregando && <p role="status">Carregando agenda...</p>}
     {erro && <div role="alert" className="space-y-3 rounded-xl bg-red-50 p-4 text-red-800">
-      <p>{erro}</p>
+      <p className="whitespace-pre-line">{erro}</p>
       {centro && <Button variant="secondary" disabled={salvando} onClick={() => {
         if (!alterado || window.confirm('Recarregar a agenda e descartar as alterações não salvas?')) setRevisao(value => value + 1)
       }}>Recarregar agenda</Button>}
