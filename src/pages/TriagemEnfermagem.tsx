@@ -107,6 +107,10 @@ export function TriagemEnfermagem({ usuario }: { usuario: LoginUserResponse }) {
         <article className="rounded-xl border border-red-100 p-5">
           <h2 className="text-xl font-semibold">Pré-triagem</h2>
           <p className="mt-2 text-sm text-zinc-600">Respostas do doador, somente para consulta. Sem interpretação clínica automática.</p>
+          {dados.questionario ? <p className="mt-2 text-sm text-zinc-600">
+            Questionário {dados.questionario.versao} · Enviado em {dataAtendimento(dados.questionario.enviado_em)}
+            {' · '}Aviso {dados.questionario.versao_aviso}
+          </p> : <p className="mt-2 text-sm text-zinc-600">Registro anterior ao questionário versionado.</p>}
           {dados.pre_triagem.length === 0 ? <p className="mt-3">Nenhuma resposta registrada.</p> : <dl className="mt-4 space-y-3">
             {dados.pre_triagem.map((resposta, index) => <div key={index}><dt className="font-semibold">{resposta.pergunta}</dt><dd className="whitespace-pre-wrap break-words">{resposta.resposta}</dd></div>)}
           </dl>}

@@ -169,6 +169,11 @@ export function Privacidade({ onVoltar, onContaRemovida, embedded = false }: Pri
               <p>Agendamento: {dataAtendimento(item.agendado_em)}</p>
               <p>Status: {item.status} · Resultado: {item.resultado ?? '-'}</p>
               <p className="whitespace-pre-wrap">Observações: {item.observacoes ?? '-'}</p>
+              {item.questionario && <div className="mt-2 space-y-1">
+                <p>Questionário: {item.questionario.versao} · Enviado em {dataAtendimento(item.questionario.enviado_em)}</p>
+                <p>Aviso de privacidade: {item.questionario.versao_aviso}</p>
+                <p>Confirmações registradas: {item.questionario.confirmacoes.join(', ')}</p>
+              </div>}
               {item.pre_triagem.map((resposta, i) => <p key={i} className="mt-2 whitespace-pre-wrap">{resposta.pergunta}: {resposta.resposta}</p>)}
               {item.alteracoes.length > 0 && <ul className="mt-3 space-y-2" aria-label="Alterações da reserva">
                 {item.alteracoes.map((alteracao, i) => <li key={i}>

@@ -95,6 +95,15 @@ export async function downloadExportacaoTitularPdf(payload: ExportacaoTitular): 
       doc.text(`Resultado: ${atendimento.resultado ?? '-'}`)
       doc.text(`Finalizacao: ${formatarDataHora(atendimento.finalizada_em)}`)
       doc.text(`Observacoes: ${atendimento.observacoes ?? '-'}`)
+      if (atendimento.questionario) {
+        doc.text(`Questionario: ${atendimento.questionario.versao}`)
+        doc.text(`Enviado em: ${formatarDataHora(atendimento.questionario.enviado_em)}`)
+        doc.text(`Aviso: ${atendimento.questionario.versao_aviso}`)
+        doc.text(`Confirmacoes: ${atendimento.questionario.confirmacoes.join(', ')}`)
+        for (const resposta of atendimento.questionario.respostas) {
+          doc.text(`Identificador: ${resposta.id} - Valores declarados: ${resposta.valores.join('; ')}`)
+        }
+      }
       for (const resposta of atendimento.pre_triagem) {
         doc.text(`Pergunta: ${resposta.pergunta}`)
         doc.text(`Resposta: ${resposta.resposta}`)

@@ -1,4 +1,4 @@
-import type { ResultadoTriagem, RespostaPreTriagem } from './triagem'
+import type { MetadadosPreTriagem, ResultadoTriagem, RespostaPreTriagem } from './triagem'
 import type { CorenUF } from './usuario'
 import type { AlteracaoReserva } from './agenda'
 
@@ -27,6 +27,7 @@ export interface DadosTitular {
     agendado_em: string
     status: string
     pre_triagem: RespostaPreTriagem[]
+    questionario: (MetadadosPreTriagem & { respostas: { id: string; valores: string[] }[] }) | null
     observacoes: string | null
     resultado: ResultadoTriagem | null
     finalizada_em: string | null
