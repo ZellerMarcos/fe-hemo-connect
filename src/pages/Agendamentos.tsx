@@ -3,6 +3,7 @@ import type { FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { Button } from '../components/ui/button'
+import { ConfirmarCancelamentoModal } from '../components/ConfirmarCancelamentoModal'
 import { FormularioPreTriagem } from '../components/FormularioPreTriagem'
 import type { FormularioPreTriagemHandle } from '../components/FormularioPreTriagem'
 import { SeletorHorario } from '../components/SeletorHorario'
@@ -45,6 +46,7 @@ export function Agendamentos() {
   const [ocupado, setOcupado] = useState(false)
   const [revisao, setRevisao] = useState(0)
   const [remarcando, setRemarcando] = useState<Reserva | null>(null)
+  const [reservaCancelando, setReservaCancelando] = useState<Reserva | null>(null)
   const requisicao = useRef<{ conteudo: string; chave: string } | null>(null)
 
   const estadoFormulario = JSON.stringify({ respostas, confirmacoes })
@@ -250,7 +252,7 @@ export function Agendamentos() {
   }
 
   async function cancelar(reserva: Reserva) {
-    if (ocupado || !window.confirm(`Cancelar a reserva em ${dataAtendimento(reserva.agendado_em, reserva.fuso_horario)}? A vaga será liberada e o registro será preservado.`)) return
+    if (ocupado) return
     setErroAcao('')
     setMensagem('')
     setOcupado(true)
@@ -260,11 +262,13 @@ export function Agendamentos() {
         chave_requisicao: chave(JSON.stringify({ acao: 'cancelar', id: reserva.id, versao: reserva.versao })),
       })
       setMensagem('Reserva cancelada. A vaga foi liberada.')
+      setReservaCancelando(null)
       if (remarcando?.id === reserva.id) encerrarRemarcacao()
       requisicao.current = null
       setRevisao(value => value + 1)
     } catch (error) {
       setErroAcao(mensagemErro(error))
+      setReservaCancelando(null)
       setRevisao(value => value + 1)
     } finally {
       setOcupado(false)
@@ -275,6 +279,12 @@ export function Agendamentos() {
   const unidadesAtivas = centros.filter(item => item.status === 'ATIVO')
 
   return <section className="min-w-0 space-y-5" aria-label="Agendamentos e histórico">
+    {reservaCancelando && <ConfirmarCancelamentoModal
+      dataReserva={dataAtendimento(reservaCancelando.agendado_em, reservaCancelando.fuso_horario)}
+      ocupado={ocupado}
+      onConfirmar={() => void cancelar(reservaCancelando)}
+      onFechar={() => setReservaCancelando(null)}
+    />}
     <Button variant="secondary" disabled={ocupado} onClick={() => { if (confirmarNavegacao()) navigate('/home') }}>Voltar à central</Button>
     {carregando && <p role="status">Carregando dados...</p>}
     {erroDados && <div role="alert" className="space-y-2 rounded-xl bg-red-50 p-4 text-red-800">
@@ -363,7 +373,7 @@ export function Agendamentos() {
                 setRemarcando(item); setCentro(String(item.hemocentro_id)); escolherHorario(null)
                 setEstadoRespostaAnterior('idle'); setErroAcao(''); setMensagem(''); requisicao.current = null
               }}>Remarcar</Button>
-              <Button variant="ghost" disabled={ocupado || !item.pode_cancelar} onClick={() => void cancelar(item)}>Cancelar reserva</Button>
+              <Button variant="ghost" disabled={ocupado || !item.pode_cancelar} onClick={() => setReservaCancelando(item)}>Cancelar reserva</Button>
             </div>
             {!item.pode_cancelar && item.motivo_cancelamento && <p className="text-sm text-zinc-600">Cancelamento: {item.motivo_cancelamento}</p>}
             {!item.pode_remarcar && item.motivo_remarcacao && <p className="text-sm text-zinc-600">Remarcação: {item.motivo_remarcacao}</p>}
