@@ -234,6 +234,88 @@ button:disabled {
   opacity: 0.65;
 }
 
+.donor-home .home-action-card {
+  border-width: 1px 1px 1px 4px;
+  border-radius: 1rem;
+  color: #27272a;
+  font-family: 'Trebuchet MS', sans-serif;
+  font-weight: 400;
+}
+
+.donor-home .home-action-card[data-color='agenda'] {
+  border-color: #bfdbfe;
+  border-left-color: #2563eb;
+  background: #f8fbff;
+}
+
+.donor-home .home-action-card[data-color='profile'] {
+  border-color: #ddd6fe;
+  border-left-color: #7c3aed;
+  background: #fcfaff;
+}
+
+.donor-home .home-action-card[data-color='centros'] {
+  border-color: #99f6e4;
+  border-left-color: #0f766e;
+  background: #f7fffd;
+}
+
+.donor-home .home-action-card:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 0.75rem 1.5rem rgba(39, 39, 42, 0.1);
+}
+
+.donor-home .home-action-card[data-color='agenda']:hover:not(:disabled) {
+  background: #eff6ff;
+}
+
+.donor-home .home-action-card[data-color='profile']:hover:not(:disabled) {
+  background: #f5f3ff;
+}
+
+.donor-home .home-action-card[data-color='centros']:hover:not(:disabled) {
+  background: #f0fdfa;
+}
+
+.donor-home .home-action-card:focus-visible {
+  outline: 3px solid #18181b;
+  outline-offset: 3px;
+}
+
+.donor-home .home-action-icon {
+  border-radius: 0.75rem;
+}
+
+.donor-home .home-action-card[data-color='agenda'] .home-action-icon {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.donor-home .home-action-card[data-color='profile'] .home-action-icon {
+  background: #ede9fe;
+  color: #6d28d9;
+}
+
+.donor-home .home-action-card[data-color='centros'] .home-action-icon {
+  background: #ccfbf1;
+  color: #115e59;
+}
+
+.donor-home .home-action-title {
+  color: #18181b;
+  font-weight: 700;
+}
+
+.donor-home .home-action-description {
+  color: #3f3f46;
+  font-weight: 400;
+}
+
+.donor-home .home-action-card:disabled {
+  cursor: default;
+  opacity: 1;
+}
+
 .text-button,
 .back-link,
 .secondary-button {
