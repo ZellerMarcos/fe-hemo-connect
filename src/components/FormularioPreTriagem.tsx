@@ -23,11 +23,10 @@ const selecao = 'size-5 shrink-0 accent-red-700 focus-visible:outline-2 focus-vi
 export const FormularioPreTriagem = forwardRef<FormularioPreTriagemHandle, Props>(function FormularioPreTriagem(
   { catalogo, respostas, confirmacoes, onRespostas, onConfirmacoes, disabled }, ref,
 ) {
-  const [aberto, setAberto] = useState(false)
   const [tentouValidar, setTentouValidar] = useState(false)
   const [politicaAberta, setPoliticaAberta] = useState(false)
   const [politicaLida, setPoliticaLida] = useState(false)
-  const raiz = useRef<HTMLDetailsElement>(null)
+  const raiz = useRef<HTMLElement>(null)
   const visiveis = perguntasVisiveis(catalogo, respostas)
   const obrigatorias = visiveis.filter(item => item.obrigatoria)
   const concluidas = obrigatorias.filter(item => !erroResposta(item, respostas[item.id])).length
@@ -45,7 +44,6 @@ export const FormularioPreTriagem = forwardRef<FormularioPreTriagemHandle, Props
     validar() {
       setTentouValidar(true)
       if (!erros.length) return true
-      setAberto(true)
       requestAnimationFrame(() => {
         const primeiro = raiz.current?.querySelector<HTMLElement>('[aria-invalid="true"]')
         primeiro?.focus()
@@ -60,12 +58,14 @@ export const FormularioPreTriagem = forwardRef<FormularioPreTriagemHandle, Props
   }
 
   return <>
-    <details ref={raiz} open={aberto} onToggle={event => setAberto(event.currentTarget.open)}
-      className="min-w-0 rounded-xl border border-red-200 p-4">
-      <summary className="min-h-11 cursor-pointer rounded-lg py-2 font-semibold focus-visible:outline-2 focus-visible:outline-red-700">
-        Formulário de pré-triagem <span className="text-sm text-red-800">— Obrigatório</span>
-        <span className="block text-sm font-normal">{concluidas} de {obrigatorias.length} perguntas obrigatórias respondidas · {confirmadas} de {catalogo.confirmacoes.length} confirmações</span>
-      </summary>
+    <section ref={raiz} aria-labelledby="formulario-pre-triagem-title"
+      className="min-w-0 space-y-4 rounded-xl border border-red-200 p-4">
+      <div>
+        <h2 id="formulario-pre-triagem-title" className="font-semibold">
+          Formulario Pre Triagem <span className="text-sm text-red-800">— Obrigatório</span>
+        </h2>
+        <p className="text-sm">{concluidas} de {obrigatorias.length} perguntas obrigatórias respondidas · {confirmadas} de {catalogo.confirmacoes.length} confirmações</p>
+      </div>
       <progress className="w-full accent-red-700" aria-label="Progresso da pré-triagem"
         value={concluidas + confirmadas} max={Math.max(1, obrigatorias.length + catalogo.confirmacoes.length)} />
       <div className="space-y-5 pt-4">
@@ -136,31 +136,8 @@ export const FormularioPreTriagem = forwardRef<FormularioPreTriagemHandle, Props
           </fieldset>
         </fieldset>
       </div>
-    </details>
+    </section>
     <PrivacyPolicyModal open={politicaAberta} onClose={() => setPoliticaAberta(false)}
       readComplete={politicaLida} onReadComplete={() => setPoliticaLida(true)} />
   </>
 })
-
-export function ResumoPreTriagem({ catalogo, respostas, confirmacoes }: Pick<Props, 'catalogo' | 'respostas' | 'confirmacoes'>) {
-  const visiveis = perguntasVisiveis(catalogo, respostas)
-  function resumo(secao: 'geral' | 'confidencial') {
-    return <dl className="space-y-3">{visiveis.filter(item => item.secao === secao).map(item => <div key={item.id}>
-      <dt className="font-semibold">{item.texto}</dt>
-      <dd className="whitespace-pre-wrap break-words">{(respostas[item.id] ?? []).map(valor =>
-        item.opcoes.find(opcao => opcao.valor === valor)?.rotulo
-          ?? (valor === 'desconhecido' && (item.tipo === 'numero' || item.tipo === 'data') ? 'Não sei informar' : valor),
-      ).join('; ') || 'Não informado (opcional)'}</dd>
-    </div>)}</dl>
-  }
-  return <div className="space-y-4">
-    <p className="text-sm">Questionário {catalogo.versao} · Aviso {catalogo.versao_aviso}</p>
-    {resumo('geral')}
-    <details className="rounded-xl border border-red-200 p-3">
-      <summary className="min-h-11 cursor-pointer py-2 font-semibold focus-visible:outline-2 focus-visible:outline-red-700">Respostas confidenciais — abrir para conferir</summary>
-      {resumo('confidencial')}
-    </details>
-    <h4 className="font-semibold">Confirmações registradas</h4>
-    <ul className="list-inside list-disc">{catalogo.confirmacoes.filter(item => confirmacoes.includes(item.id)).map(item => <li key={item.id}>{item.texto}</li>)}</ul>
-  </div>
-}
