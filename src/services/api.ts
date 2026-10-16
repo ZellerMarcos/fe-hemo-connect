@@ -23,6 +23,60 @@ function resolveApiUrl(): string {
 
 const API_URL = resolveApiUrl()
 
+const VALIDATION_FIELD_LABELS: Record<string, string> = {
+  fuso_horario: 'Fuso horário',
+  duracao_minutos: 'Duração do horário',
+  capacidade: 'Vagas por horário',
+  antecedencia_minutos: 'Antecedência para reservar',
+  horizonte_dias: 'Horizonte de reservas',
+  cancelamento_minutos: 'Antecedência para cancelar',
+  remarcacao_minutos: 'Antecedência para remarcar',
+  publicada: 'Publicação',
+  periodos: 'Períodos semanais',
+  excecoes: 'Feriados e exceções',
+  dia_semana: 'Dia da semana',
+  inicio: 'Início',
+  fim: 'Fim',
+  data: 'Data',
+  versao: 'Versão da agenda',
+}
+
+function validationLocation(location: unknown): string {
+  if (!Array.isArray(location)) return ''
+  const parts = location.filter((part): part is string | number => (
+    typeof part === 'string' || typeof part === 'number'
+  )).filter(part => part !== 'body').map((part, index, items) => {
+    if (typeof part === 'number') {
+      const parent = items[index - 1]
+      const label = parent === 'periodos'
+        ? 'Período semanal'
+        : parent === 'excecoes'
+          ? 'Exceção'
+          : 'Item'
+      return `${label} ${part + 1}`
+    }
+    return VALIDATION_FIELD_LABELS[part] ?? part
+  })
+  return parts.join(' > ')
+}
+
+function formatValidationErrors(detail: unknown): string | null {
+  if (!Array.isArray(detail)) return null
+  const messages = detail.flatMap(item => {
+    if (typeof item !== 'object' || item === null || !('msg' in item) || typeof item.msg !== 'string') {
+      return []
+    }
+    const location = 'loc' in item ? validationLocation(item.loc) : ''
+    return [`${location ? `${location}: ` : ''}${item.msg}`]
+  })
+  if (messages.length === 0) return null
+  const visibleMessages = messages.slice(0, 5)
+  if (messages.length > visibleMessages.length) {
+    visibleMessages.push(`E mais ${messages.length - visibleMessages.length} erro(s) de validação.`)
+  }
+  return visibleMessages.join('\n')
+}
+
 // A função request centraliza a comunicação HTTP da aplicação, padronizando URL base, headers e tratamento de erros do backend.
 export async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   // Centralizar o fetch mantém a URL base, os headers e o padrão de tratamento de erros em um único ponto.
@@ -41,7 +95,10 @@ export async function request<T>(path: string, options: RequestInit = {}): Promi
     try {
       const body: { detail?: unknown } = await response.json()
       if (response.status < 500 && typeof body.detail === 'string') message = body.detail
-      if (response.status === 422 && Array.isArray(body.detail)) message = 'Verifique os campos informados e tente novamente.'
+      if (response.status === 422) {
+        message = formatValidationErrors(body.detail)
+          ?? 'A API rejeitou os dados. Confira os campos informados e tente novamente.'
+      }
       // Qualquer 401 em rotas protegidas sinaliza sessão inválida ou expirada; o app reage redirecionando para o login.
     } catch (error) {
       if (!(error instanceof SyntaxError)) throw error
