@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { CalendarPlus2, Building2, HeartPulse, ShieldCheck } from 'lucide-react'
+import { CalendarPlus2, Building2, ShieldCheck } from 'lucide-react'
 import { motion } from 'motion/react'
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { Button } from './components/ui/button'
@@ -25,7 +25,7 @@ import { confirmarNavegacao } from './hooks/useUnsavedChanges'
 import { consultarSessao, sair } from './services/auth'
 import { clearAccessToken, getAccessToken } from './services/session'
 
-const MENSAGEM_SESSAO_EXPIRADA = 'Sua sessao expirou, realize novamente seu login'
+const MENSAGEM_SESSAO_EXPIRADA = 'Sua sessão expirou. Faça login novamente.'
 
 function AuthenticatedHome({
   usuario,
@@ -40,33 +40,30 @@ function AuthenticatedHome({
 }) {
   const cards = [
     {
-      title: 'Marcar doacao',
-      description: 'Agende sua próxima doação e escolha a melhor janela de horário.',
+      title: 'Agendamentos e histórico',
+      description: 'Agende uma doação ou consulte seus atendimentos e resultados.',
       icon: CalendarPlus2,
       action: onAgendamentos,
+      color: 'agenda',
     },
     {
       title: 'Meu Perfil',
       description: 'Consulte seus dados e direitos do titular em uma única tela.',
       icon: ShieldCheck,
       action: onAbrirPerfil,
-    },
-    {
-      title: 'Histórico de atendimentos',
-      description: 'Consulte os resultados das suas triagens.',
-      icon: HeartPulse,
-      action: onAgendamentos,
+      color: 'profile',
     },
     {
       title: 'Hemocentros',
-      description: 'Visualize unidades, endereços e horários de atendimento.',
+      description: 'Consulte unidades, endereços e horários de atendimento.',
       icon: Building2,
       action: undefined,
+      color: 'centros',
     },
   ]
 
   return (
-    <main className="min-h-screen w-full bg-gradient-to-br from-rose-50 via-orange-50 to-red-100 p-4 md:p-8" aria-labelledby="welcome-title">
+    <main className="donor-home min-h-screen w-full bg-gradient-to-br from-rose-50 via-orange-50 to-red-100 p-4 md:p-8" aria-labelledby="welcome-title">
       <div className="mx-auto grid min-h-[88vh] w-full max-w-6xl grid-rows-[auto_auto_1fr_auto] gap-5 rounded-2xl border border-red-100 bg-white/90 p-6 shadow-2xl shadow-red-200/30 md:p-10">
         <header className="flex flex-col justify-between gap-4 border-b border-red-100 pb-4 md:flex-row md:items-start">
           <div className="min-w-0">
@@ -82,13 +79,8 @@ function AuthenticatedHome({
 
         <section className="grid max-w-3xl gap-4">
           <p className="text-base leading-relaxed text-zinc-700 md:text-lg">
-            Centralize suas próximas ações de doação, acompanhe seus dados e acesse os direitos do titular no mesmo fluxo.
+            Acesse seus agendamentos, acompanhe seus atendimentos e consulte seus dados em um só lugar.
           </p>
-          <div>
-            <Button onClick={onAbrirPerfil} className="rounded-2xl px-6">
-              Meu Perfil e Privacidade
-            </Button>
-          </div>
         </section>
 
         <section className="grid grid-cols-1 gap-4 md:grid-cols-2" aria-label="Atalhos do doador">
@@ -98,17 +90,19 @@ function AuthenticatedHome({
               <motion.button
                 key={card.title}
                 type="button"
+                disabled={!card.action}
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.28, delay: 0.06 * index }}
                 onClick={card.action}
-                className="group rounded-2xl border border-red-100 bg-gradient-to-br from-white to-rose-50 p-5 text-left transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-red-100"
+                data-color={card.color}
+                className="home-action-card group grid min-h-36 content-start rounded-2xl border p-5 text-left transition hover:-translate-y-0.5"
               >
-                <span className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-red-100 text-red-700">
+                <span className="home-action-icon mb-4 inline-flex h-10 w-10 items-center justify-center rounded-xl">
                   <Icon size={20} />
                 </span>
-                <p className="text-xl font-semibold text-zinc-900">{card.title}</p>
-                <p className="mt-2 text-sm leading-relaxed text-zinc-600">{card.description}</p>
+                <span className="home-action-title text-xl font-semibold">{card.title}</span>
+                <span className="home-action-description mt-2 text-sm leading-relaxed">{card.description}</span>
               </motion.button>
             )
           })}
@@ -117,7 +111,7 @@ function AuthenticatedHome({
         <footer className="mt-auto flex flex-col justify-between gap-2 border-t border-red-100 pt-4 text-xs font-medium text-zinc-500 md:flex-row">
           <BrandLogo compact />
           <Button variant="ghost" onClick={onSair}>Sair</Button>
-          <span>Doacao segura, dados sob controle</span>
+          <span>Informação e cuidado em cada etapa.</span>
         </footer>
       </div>
     </main>
