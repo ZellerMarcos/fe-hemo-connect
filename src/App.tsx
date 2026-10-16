@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { CalendarPlus2, Building2, ShieldCheck } from 'lucide-react'
 import { motion } from 'motion/react'
-import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
+import { Link, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { Button } from './components/ui/button'
 import { BrandLogo } from './components/BrandLogo'
 import { AuthFrame } from './components/layout/AuthFrame'
@@ -27,18 +27,17 @@ import { consultarSessao, sair } from './services/auth'
 import { clearAccessToken, getAccessToken } from './services/session'
 
 const MENSAGEM_SESSAO_EXPIRADA = 'Sua sessão expirou. Faça login novamente.'
+const MotionLink = motion.create(Link)
 
 function AuthenticatedHome({
   usuario,
   onAbrirPerfil,
   onAgendamentos,
-  onHemocentros,
   onSair,
 }: {
   usuario: LoginUserResponse
   onAbrirPerfil: () => void
   onAgendamentos: () => void
-  onHemocentros: () => void
   onSair: () => void
 }) {
   const cards = [
@@ -60,7 +59,7 @@ function AuthenticatedHome({
       title: 'Hemocentros',
       description: 'Consulte unidades, endereços, contatos e vagas para doação.',
       icon: Building2,
-      action: onHemocentros,
+      to: '/hemocentros',
       color: 'centros',
     },
   ]
@@ -89,25 +88,23 @@ function AuthenticatedHome({
         <section className="grid grid-cols-1 gap-4 md:grid-cols-2" aria-label="Atalhos do doador">
           {cards.map((card, index) => {
             const Icon = card.icon
-            return (
-              <motion.button
-                key={card.title}
-                type="button"
-                disabled={!card.action}
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.28, delay: 0.06 * index }}
-                onClick={card.action}
-                data-color={card.color}
-                className="home-action-card group grid min-h-36 content-start rounded-2xl border p-5 text-left transition hover:-translate-y-0.5"
-              >
-                <span className="home-action-icon mb-4 inline-flex h-10 w-10 items-center justify-center rounded-xl">
-                  <Icon size={20} />
-                </span>
-                <span className="home-action-title text-xl font-semibold">{card.title}</span>
-                <span className="home-action-description mt-2 text-sm leading-relaxed">{card.description}</span>
-              </motion.button>
-            )
+            const props = {
+              initial: { opacity: 0, y: 12 },
+              animate: { opacity: 1, y: 0 },
+              transition: { duration: 0.28, delay: 0.06 * index },
+              'data-color': card.color,
+              className: 'home-action-card group grid min-h-36 content-start rounded-2xl border p-5 text-left transition hover:-translate-y-0.5',
+            }
+            const conteudo = <>
+              <span className="home-action-icon mb-4 inline-flex h-10 w-10 items-center justify-center rounded-xl">
+                <Icon size={20} />
+              </span>
+              <span className="home-action-title text-xl font-semibold">{card.title}</span>
+              <span className="home-action-description mt-2 text-sm leading-relaxed">{card.description}</span>
+            </>
+            return card.to
+              ? <MotionLink key={card.title} to={card.to} {...props}>{conteudo}</MotionLink>
+              : <motion.button key={card.title} type="button" onClick={card.action} {...props}>{conteudo}</motion.button>
           })}
         </section>
 
@@ -227,7 +224,7 @@ function App() {
       <Route path="/cadastro" element={<AuthFrame><Cadastro onCadastroSucesso={() => navigate('/login')} onIrParaLogin={() => navigate('/login')} /></AuthFrame>} />
       <Route path="/two-factor" element={twoFactorEmail ? <AuthFrame><TwoFactor email={twoFactorEmail} onSucesso={handleLoginSucesso} onVoltar={() => { setTwoFactorEmail(''); navigate('/login') }} /></AuthFrame> : <Navigate to="/login" replace />} />
       <Route path="/index.html" element={<ResetPasswordEntry />} />
-      <Route path="/home" element={usuario ? nurseArea ? <Navigate to="/enfermeiro" replace /> : receptionArea ? <Navigate to="/recepcao" replace /> : usuario.perfil === 'DOADOR' ? <AuthenticatedHome usuario={usuario} onAbrirPerfil={abrirPerfil} onAgendamentos={() => navigate('/agendamentos')} onHemocentros={abrirHemocentros} onSair={() => void handleLogout()} /> : area('Área profissional', <p>O módulo do seu perfil não está disponível nesta versão.</p>) : <Navigate to="/login" replace />} />
+      <Route path="/home" element={usuario ? nurseArea ? <Navigate to="/enfermeiro" replace /> : receptionArea ? <Navigate to="/recepcao" replace /> : usuario.perfil === 'DOADOR' ? <AuthenticatedHome usuario={usuario} onAbrirPerfil={abrirPerfil} onAgendamentos={() => navigate('/agendamentos')} onSair={() => void handleLogout()} /> : area('Área profissional', <p>O módulo do seu perfil não está disponível nesta versão.</p>) : <Navigate to="/login" replace />} />
       <Route path="/enfermeiro" element={nurseArea ? area('Triagem de Doadores', <Enfermagem />) : acessoNegado} />
       <Route path="/enfermeiro/triagens" element={nurseArea ? area('Triagem de Doadores', <Enfermagem />) : acessoNegado} />
       <Route path="/enfermeiro/triagens/:id" element={nurseArea && usuario ? area('Atendimento de enfermagem', <TriagemEnfermagem usuario={usuario} />) : acessoNegado} />
