@@ -11,13 +11,21 @@ export interface Pergunta {
 export interface CatalogoPreTriagem {
   versao: string
   versao_aviso: string
-  publicado: boolean
   aviso: string
   confirmacoes: { id: string; texto: string }[]
   perguntas: Pergunta[]
 }
 
 export type RespostasQuestionario = Record<string, string[]>
+
+export interface UltimoQuestionario {
+  encontrado: boolean
+  compativel: boolean
+  versao: string | null
+  versao_aviso: string | null
+  enviado_em: string | null
+  respostas: { id: string; valores: string[] }[]
+}
 
 export interface QuestionarioEnvio {
   versao: string

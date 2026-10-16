@@ -1,8 +1,13 @@
 import { request } from './api'
-import type { CatalogoPreTriagem, Pergunta, QuestionarioEnvio, RespostasQuestionario } from '../types/questionario'
+import type { CatalogoPreTriagem, Pergunta, QuestionarioEnvio, RespostasQuestionario, UltimoQuestionario } from '../types/questionario'
 
 export function consultarQuestionario(signal?: AbortSignal) {
   return request<CatalogoPreTriagem>('/questionario-pre-triagem', { signal })
+}
+
+export function consultarUltimaResposta(hemocentroId: number, signal?: AbortSignal) {
+  const params = new URLSearchParams({ hemocentro_id: String(hemocentroId) })
+  return request<UltimoQuestionario>(`/questionario-pre-triagem/ultima-resposta?${params}`, { signal })
 }
 
 export function perguntasVisiveis(catalogo: CatalogoPreTriagem, respostas: RespostasQuestionario): Pergunta[] {

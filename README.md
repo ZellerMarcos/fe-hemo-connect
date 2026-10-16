@@ -164,23 +164,25 @@ Novas reservas exigem o formulário estruturado e as confirmações do catálogo
 autenticado `GET /questionario-pre-triagem`. O catálogo fornece versões, aviso,
 perguntas, alternativas e dependências; não há edição livre de perguntas nem
 decisão automática de aptidão. Se o catálogo falhar, use **Tentar novamente**.
-Se `publicado=false`, somente novas reservas ficam indisponíveis: consulta,
-cancelamento e remarcação continuam disponíveis. A publicação depende da
-validação institucional e da configuração do backend.
+O formulário **Formulario Pre Triagem** fica aberto na última etapa antes da
+confirmação. A primeira vez na unidade começa sem respostas anteriores; depois,
+o frontend consulta `GET /questionario-pre-triagem/ultima-resposta` para sugerir
+as respostas da última submissão compativel do mesmo hemocentro. Revise/atualize
+as respostas e marque as confirmações novamente em cada reserva. Erro ao carregar
+o histórico não é tratado como primeiro acesso: tente novamente antes de enviar.
 
-Abra **Formulário de pré-triagem — Obrigatório**, acompanhe o progresso e
-responda às perguntas aplicáveis. Campos condicionais ocultos são removidos
-recursivamente. Número e data aceitam **Não sei informar**; os limites são
-apenas técnicos (número maior que zero até 999,9; data até hoje UTC; texto até
-2000 caracteres). Alternativas exclusivas de seleção múltipla limpam as demais.
-Ao revisar com pendências, o formulário abre e o primeiro erro recebe foco.
-O resumo mantém as respostas confidenciais recolhidas inicialmente.
+Campos condicionais ocultos são removidos recursivamente. Número e data aceitam
+**Não sei informar**; os limites são apenas técnicos (número maior que zero até
+999,9; data até hoje UTC; texto até 2000 caracteres). Alternativas exclusivas de
+seleção múltipla limpam as demais. O primeiro erro recebe foco.
 
 Respostas e confirmações ficam somente na memória da página, inclusive ao
 revisar/editar ou após falha de envio. A política abre em modal sem descartar
 o formulário. Sair ou recarregar usa o aviso de alterações não enviadas;
 o descarte explícito requer confirmação. Não há rascunho em armazenamento
-do navegador. Após sucesso, os dados preenchidos são limpos.
+do navegador; respostas anteriores permanecem guardadas somente no snapshot
+de cada agendamento no backend. Após sucesso, a tela atualiza a sugestão a partir
+da última reserva.
 
 `POST /agendamentos` envia `horario_id`, `chave_requisicao` e
 `questionario: {versao, versao_aviso, respostas: [{id, valores: string[]}],
