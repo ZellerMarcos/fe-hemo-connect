@@ -159,7 +159,7 @@ export function PrivacyPolicyModal({ open, onClose, onReadComplete, readComplete
             <section>
               <h3 className="text-lg font-semibold text-zinc-900">4. Dados relacionados à saúde</h3>
               <p>O Hemo Connect pode tratar informações relacionadas à saúde fornecidas pelo usuário durante o processo de pré-triagem e atendimento.</p>
-              <p>O formulário inclui perguntas íntimas. Você pode escolher “Prefiro conversar com o profissional” nas alternativas previstas, sem impedir o agendamento. As respostas não determinam automaticamente aptidão para doar e não ficam salvas como rascunho no navegador. Consulte o aviso do formulário para identificar o controlador e o canal institucional de privacidade, solicitar correção após o envio e exercer seus direitos. A ciência desse aviso não representa autorização genérica para outros usos.</p>
+              <p>O formulário inclui perguntas íntimas. Você pode escolher “Prefiro conversar com o profissional” nas alternativas previstas, sem impedir o agendamento. As respostas não determinam automaticamente aptidão para doar e não ficam salvas como rascunho no navegador. Consulte a política de privacidade e os canais oficiais da instituição para solicitar correção após o envio e exercer seus direitos. A ciência desse aviso não representa autorização genérica para outros usos.</p>
               <p>Essas informações possuem caráter sensível e devem ser utilizadas exclusivamente quando necessárias para as finalidades relacionadas ao processo de doação e avaliação profissional.</p>
               <p>O acesso a essas informações deve ser limitado aos profissionais e usuários que possuam autorização compatível com sua função dentro do sistema.</p>
               <p>Por exemplo:</p>
