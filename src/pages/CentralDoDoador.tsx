@@ -1,3 +1,5 @@
+import { BrandLogo } from '../components/BrandLogo'
+
 interface CentralDoDoadorProps {
   nome: string
 }
@@ -32,7 +34,7 @@ export function CentralDoDoador({ nome }: CentralDoDoadorProps) {
     <section className="dashboard-shell" aria-labelledby="central-title">
       <header className="dashboard-header">
         <div>
-          <p className="eyebrow">Hemo Connect</p>
+          <BrandLogo compact className="mb-6" />
           <h1 id="central-title">Central do Doador</h1>
         </div>
         <div className="user-pill">Olá, {nome}</div>

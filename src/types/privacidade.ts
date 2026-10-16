@@ -1,3 +1,7 @@
+import type { ResultadoTriagem, RespostaPreTriagem } from './triagem'
+import type { CorenUF } from './usuario'
+import type { AlteracaoReserva } from './agenda'
+
 // Estrutura de cada consentimento associado ao titular para exibição em tela.
 export interface Consentimento {
   finalidade: string
@@ -14,6 +18,20 @@ export interface DadosTitular {
   cpf: string
   email: string
   perfil: string
+  data_nascimento: string | null
+  telefone: string | null
+  tipo_sanguineo: string | null
+  coren_numero: string | null
+  coren_uf: CorenUF | null
+  atendimentos: {
+    agendado_em: string
+    status: string
+    pre_triagem: RespostaPreTriagem[]
+    observacoes: string | null
+    resultado: ResultadoTriagem | null
+    finalizada_em: string | null
+    alteracoes: AlteracaoReserva[]
+  }[]
   consentimentos: Consentimento[]
 }
 

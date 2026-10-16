@@ -5,6 +5,10 @@ export interface DadosTitularFormatados {
   cpf: string
   email: string
   perfil: string
+  dataNascimento: string
+  telefone: string
+  tipoSanguineo: string
+  coren: string
 }
 
 function somenteDigitos(value: string): string {
@@ -44,6 +48,10 @@ export function formatarDadosTitular(dados: DadosTitular): DadosTitularFormatado
     cpf: mascararCpf(dados.cpf),
     email: dados.email,
     perfil: dados.perfil,
+    dataNascimento: dados.data_nascimento?.split('-').reverse().join('/') ?? '-',
+    telefone: dados.telefone ?? '-',
+    tipoSanguineo: dados.tipo_sanguineo ?? '-',
+    coren: dados.coren_numero && dados.coren_uf ? `${dados.coren_uf} · ${dados.coren_numero}` : '-',
   }
 }
 

@@ -9,10 +9,11 @@ interface PrivacyPolicyModalProps {
   readComplete: boolean
 }
 
-const POLICY_VERSION = 'v1.1'
+const POLICY_VERSION = 'v1.2'
 
 const policyPurposes = [
   'Criar e manter o cadastro do usuário',
+  'Permitir a conferência administrativa do registro profissional e da identidade para acesso de enfermagem',
   'Permitir a autenticação e o acesso seguro à plataforma',
   'Realizar autenticação em dois fatores',
   'Permitir recuperação de senha',
@@ -26,7 +27,7 @@ const policyPurposes = [
   'Melhorar a experiência e o funcionamento da aplicação',
 ]
 
-const identificationData = ['Nome completo', 'CPF', 'Data de nascimento', 'Tipo sanguíneo', 'E-mail', 'Telefone']
+const identificationData = ['Nome completo', 'CPF', 'Data de nascimento', 'Tipo sanguíneo', 'E-mail', 'Telefone', 'Número e UF do COREN, exclusivamente no cadastro de enfermeiros']
 const donationData = [
   'Histórico de doações',
   'Agendamentos',
@@ -139,6 +140,7 @@ export function PrivacyPolicyModal({ open, onClose, onReadComplete, readComplete
               <p>Durante a utilização do Hemo Connect, podemos coletar informações necessárias para o funcionamento da plataforma, incluindo:</p>
               <h4 className="mt-3 font-semibold text-zinc-900">Dados de identificação</h4>
               <PolicyList items={identificationData} />
+              <p className="mt-3">O COREN informado será disponibilizado ao administrador para conferência profissional e liberação do acesso vinculado a um hemocentro. Não realizamos consulta automática ao conselho. A conta de enfermagem permanece inativa enquanto a solicitação estiver pendente.</p>
               <h4 className="mt-3 font-semibold text-zinc-900">Dados relacionados à doação</h4>
               <PolicyList items={donationData} />
               <h4 className="mt-3 font-semibold text-zinc-900">Dados de segurança e acesso</h4>

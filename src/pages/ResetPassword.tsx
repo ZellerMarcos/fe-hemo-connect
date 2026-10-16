@@ -3,6 +3,7 @@ import { FormEvent, useState } from 'react'
 import { ArrowLeft, Eye, EyeOff, KeyRound } from 'lucide-react'
 
 import { Button } from '../components/ui/button'
+import { BrandLogo } from '../components/BrandLogo'
 import { Input } from '../components/ui/input'
 import { redefinirSenha } from '../services/auth'
 
@@ -68,7 +69,7 @@ export function ResetPassword({ token, onVoltarAoLogin }: ResetPasswordProps) {
   return (
     <section id="reset-password-modal" className="w-full max-w-lg rounded-2xl border border-red-100 bg-white/92 p-6 shadow-2xl shadow-red-100/40 md:p-8" aria-labelledby="reset-password-title">
       <div>
-        <p className="text-xs font-bold uppercase tracking-[0.16em] text-red-700">Hemo Connect</p>
+        <BrandLogo />
         <h1 id="reset-password-title" className="mt-3 text-3xl font-semibold text-zinc-900 md:text-4xl">Nova senha</h1>
         <p className="mt-3 text-sm leading-relaxed text-zinc-600 md:text-base">Crie uma nova senha para continuar.</p>
       </div>

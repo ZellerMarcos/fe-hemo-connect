@@ -2,6 +2,7 @@ import { request } from './api'
 import type {
   LoginRequest,
   LoginResponse,
+  LoginUserResponse,
   PasswordResetRequest,
   PasswordResetResponse,
   PasswordResetSubmitRequest,
@@ -42,4 +43,12 @@ export function redefinirSenha(data: PasswordResetSubmitRequest) {
     method: 'POST',
     body: JSON.stringify(data),
   })
+}
+
+export function consultarSessao() {
+  return request<LoginUserResponse>('/auth/me')
+}
+
+export function sair() {
+  return request<{ logged_out: boolean }>('/auth/logout', { method: 'POST' })
 }

@@ -3,6 +3,7 @@ import Helvetica from 'pdfkit/standard-fonts/Helvetica'
 
 import type { ExportacaoTitular } from '../types/privacidade'
 import { formatarConsentimentos, formatarDadosTitular, formatarDataHora } from './privacyFormatters'
+import { BRAND_LOGO } from './branding'
 
 const PDFDocument = PDFKit.default
 const registerStdFonts = (PDFKit as unknown as { registerStdFonts?: (...fonts: unknown[]) => void }).registerStdFonts
@@ -32,15 +33,23 @@ export async function downloadExportacaoTitularPdf(payload: ExportacaoTitular): 
   const fileName = gerarNomeArquivo(new Date())
   const titular = formatarDadosTitular(payload.titular)
   const consentimentos = formatarConsentimentos(payload.titular.consentimentos)
+  const logoResponse = await fetch(BRAND_LOGO.url)
+  if (!logoResponse.ok) {
+    throw new Error('Nao foi possivel carregar o logo para a exportacao em PDF.')
+  }
+  const logo = await logoResponse.arrayBuffer()
 
-  await new Promise<void>((resolve) => {
+  await new Promise<void>((resolve, reject) => {
     const doc = new PDFDocument({ margin: 48, size: 'A4' })
     const chunks: Uint8Array[] = []
+    doc.on('error', reject)
 
     doc.on('data', (chunk: Uint8Array) => {
       chunks.push(chunk)
     })
 
+    doc.image(logo, 48, 48, { width: 280 })
+    doc.y = 132
     doc.fontSize(18).text('Hemo Connect - Direitos do Titular')
     doc.moveDown(0.5)
     doc.fontSize(11).fillColor('#4B5563').text(`Exportado em: ${formatarDataHora(payload.exportado_em)}`)
@@ -54,6 +63,10 @@ export async function downloadExportacaoTitularPdf(payload: ExportacaoTitular): 
     doc.text(`CPF: ${titular.cpf}`)
     doc.text(`E-mail: ${titular.email}`)
     doc.text(`Perfil: ${titular.perfil}`)
+    doc.text(`Data de nascimento: ${titular.dataNascimento}`)
+    doc.text(`Telefone: ${titular.telefone}`)
+    doc.text(`Tipo sanguineo: ${titular.tipoSanguineo}`)
+    if (payload.titular.coren_numero) doc.text(`COREN: ${titular.coren}`)
     doc.moveDown()
 
     doc.fontSize(14).text('Consentimentos')
@@ -72,6 +85,28 @@ export async function downloadExportacaoTitularPdf(payload: ExportacaoTitular): 
       doc.text(`   Revogado em: ${item.revogadoEm}`)
       doc.moveDown(0.5)
     })
+
+    doc.fontSize(14).text('Atendimentos e respostas de pre-triagem')
+    doc.moveDown(0.5)
+    if (payload.titular.atendimentos.length === 0) doc.fontSize(11).text('Nenhum atendimento registrado.')
+    for (const atendimento of payload.titular.atendimentos) {
+      doc.fontSize(11).text(`Agendamento: ${formatarDataHora(atendimento.agendado_em)}`)
+      doc.text(`Status: ${atendimento.status}`)
+      doc.text(`Resultado: ${atendimento.resultado ?? '-'}`)
+      doc.text(`Finalizacao: ${formatarDataHora(atendimento.finalizada_em)}`)
+      doc.text(`Observacoes: ${atendimento.observacoes ?? '-'}`)
+      for (const resposta of atendimento.pre_triagem) {
+        doc.text(`Pergunta: ${resposta.pergunta}`)
+        doc.text(`Resposta: ${resposta.resposta}`)
+      }
+      for (const alteracao of atendimento.alteracoes) {
+        doc.text(`Alteracao: ${alteracao.acao} em ${formatarDataHora(alteracao.ocorrido_em)}`)
+        if (alteracao.acao === 'REMARCADO') {
+          doc.text(`De: ${formatarDataHora(alteracao.agendado_anterior)} para: ${formatarDataHora(alteracao.agendado_novo)}`)
+        }
+      }
+      doc.moveDown()
+    }
 
     doc.on('end', () => {
       const blob = new Blob(chunks, { type: 'application/pdf' })

@@ -4,8 +4,11 @@ import { Eye, EyeOff, FileText, UserPlus } from 'lucide-react'
 
 import { PrivacyPolicyModal, POLICY_VERSION } from '../components/PrivacyPolicyModal'
 import { Button } from '../components/ui/button'
+import { BrandLogo } from '../components/BrandLogo'
 import { Input } from '../components/ui/input'
 import { cadastrarUsuario } from '../services/usuarios'
+import { COREN_UFS } from '../types/usuario'
+import type { CorenUF, TipoSanguineo, UsuarioPerfil } from '../types/usuario'
 
 interface CadastroProps {
   onCadastroSucesso: () => void
@@ -13,7 +16,12 @@ interface CadastroProps {
 }
 
 export function Cadastro({ onCadastroSucesso, onIrParaLogin }: CadastroProps) {
-  const [form, setForm] = useState({ nome: '', cpf: '', email: '', senha: '', confirmacaoSenha: '' })
+  const [form, setForm] = useState({ nome: '', cpf: '', email: '', senha: '', confirmacaoSenha: '', dataNascimento: '', telefone: '' })
+  const [tipoSanguineo, setTipoSanguineo] = useState<TipoSanguineo | ''>('')
+  const [perfil, setPerfil] = useState<UsuarioPerfil>('DOADOR')
+  const [corenNumero, setCorenNumero] = useState('')
+  const [corenUF, setCorenUF] = useState<CorenUF | ''>('')
+  const [aprovacaoPendente, setAprovacaoPendente] = useState(false)
   const [consentimentoAceito, setConsentimentoAceito] = useState(false)
   const [politicaAberta, setPoliticaAberta] = useState(false)
   const [leituraPoliticaConcluida, setLeituraPoliticaConcluida] = useState(false)
@@ -54,6 +62,10 @@ export function Cadastro({ onCadastroSucesso, onIrParaLogin }: CadastroProps) {
       setErro('A confirmação de senha deve ser igual à senha.')
       return
     }
+    if (perfil === 'ENFERMEIRO' && (!/^\d{1,20}$/.test(corenNumero) || !corenUF)) {
+      setErro('Informe o número de inscrição do COREN, somente com dígitos, e selecione a UF.')
+      return
+    }
 
     // O cadastro so avanca depois da leitura integral e do aceite explicito do titular.
     if (!leituraPoliticaConcluida) {
@@ -68,14 +80,15 @@ export function Cadastro({ onCadastroSucesso, onIrParaLogin }: CadastroProps) {
 
     setCarregando(true)
     try {
-      await cadastrarUsuario({
+      const cadastroBase = {
         nome: form.nome,
         cpf: form.cpf,
         email: form.email,
         senha: form.senha,
-        perfil: 'DOADOR',
-        status: 'ATIVO',
         hemocentro_id: null,
+        data_nascimento: form.dataNascimento || null,
+        telefone: form.telefone.trim() || null,
+        tipo_sanguineo: tipoSanguineo || null,
         // O payload envia aceite, versao e finalidades para registro auditavel no backend.
         consentimento_aceito: true,
         consentimento_versao: POLICY_VERSION,
@@ -90,10 +103,17 @@ export function Cadastro({ onCadastroSucesso, onIrParaLogin }: CadastroProps) {
           'comunicacao',
           'recuperacao_conta',
           'melhoria_plataforma',
+          ...(perfil === 'ENFERMEIRO' ? ['validacao_profissional'] : []),
         ],
-      })
+      }
+      const response = perfil === 'ENFERMEIRO' && corenUF
+        ? await cadastrarUsuario({ ...cadastroBase, perfil: 'ENFERMEIRO', status: 'INATIVO', coren_numero: corenNumero, coren_uf: corenUF })
+        : await cadastrarUsuario({ ...cadastroBase, perfil: 'DOADOR', status: 'ATIVO' })
+      setAprovacaoPendente(response.aprovacao_pendente)
       setSucesso(true)
-      setForm({ nome: '', cpf: '', email: '', senha: '', confirmacaoSenha: '' })
+      setForm({ nome: '', cpf: '', email: '', senha: '', confirmacaoSenha: '', dataNascimento: '', telefone: '' })
+      setTipoSanguineo('')
+      setCorenNumero(''); setCorenUF('')
       setConsentimentoAceito(false)
       setLeituraPoliticaConcluida(false)
     } catch (error) {
@@ -112,15 +132,54 @@ export function Cadastro({ onCadastroSucesso, onIrParaLogin }: CadastroProps) {
   return (
     <section className="w-full max-w-xl rounded-2xl border border-red-100 bg-white/92 p-6 shadow-2xl shadow-red-100/40 md:p-8" aria-labelledby="cadastro-title">
       <div>
-        <p className="text-xs font-bold uppercase tracking-[0.16em] text-red-700">Hemo Connect</p>
+        <BrandLogo />
         <h1 id="cadastro-title" className="mt-3 text-3xl font-semibold text-zinc-900 md:text-4xl">Criar cadastro</h1>
-        <p className="mt-3 text-sm leading-relaxed text-zinc-600 md:text-base">Comece sua jornada como doador.</p>
+        <p className="mt-3 text-sm leading-relaxed text-zinc-600 md:text-base">Cadastre-se como doador ou solicite acesso profissional de enfermagem.</p>
       </div>
 
       <form onSubmit={handleSubmit} noValidate className="mt-6 grid gap-4">
+        <label className="grid gap-2 text-sm font-semibold text-zinc-700">Perfil de cadastro
+          <select className="rounded-xl border border-red-200 bg-white p-3" value={perfil} disabled={carregando} onChange={event => {
+            const value = event.target.value
+            if (value === 'DOADOR' || value === 'ENFERMEIRO') {
+              setPerfil(value); setCorenNumero(''); setCorenUF(''); setErro(''); setSucesso(false)
+            }
+          }}>
+            <option value="DOADOR">Doador(a)</option>
+            <option value="ENFERMEIRO">Enfermeiro(a)</option>
+          </select>
+        </label>
+        {perfil === 'ENFERMEIRO' && <fieldset className="grid gap-3 rounded-xl border border-red-100 bg-rose-50 p-4" disabled={carregando}>
+          <legend className="text-sm font-semibold">Registro profissional</legend>
+          <label className="grid gap-2 text-sm">Número do COREN
+            <Input required inputMode="numeric" maxLength={20} value={corenNumero} onChange={event => setCorenNumero(event.target.value.replace(/\D/g, ''))} />
+          </label>
+          <label className="grid gap-2 text-sm">UF do COREN
+            <select required className="rounded-xl border border-red-200 bg-white p-3" value={corenUF} onChange={event => {
+              const uf = COREN_UFS.find(value => value === event.target.value)
+              setCorenUF(uf ?? '')
+            }}>
+              <option value="">Selecione a UF</option>
+              {COREN_UFS.map(uf => <option key={uf}>{uf}</option>)}
+            </select>
+          </label>
+          <p className="text-sm text-zinc-600">O número informado não comprova o registro profissional. Sua conta ficará inativa até um administrador conferir o COREN e sua identidade e vinculá-la a um hemocentro.</p>
+        </fieldset>}
         <label className="grid gap-2 text-sm font-semibold text-zinc-700">Nome completo<Input value={form.nome} onChange={(event) => updateField('nome', event.target.value)} autoComplete="name" required /></label>
         <label className="grid gap-2 text-sm font-semibold text-zinc-700">CPF<Input value={form.cpf} onChange={(event) => updateField('cpf', event.target.value.replace(/\D/g, '').slice(0, 11))} inputMode="numeric" maxLength={11} required /></label>
         <label className="grid gap-2 text-sm font-semibold text-zinc-700">E-mail<Input type="email" value={form.email} onChange={(event) => updateField('email', event.target.value)} autoComplete="email" required /></label>
+        <fieldset className="grid gap-3 rounded-xl border border-red-100 p-3">
+          <legend className="text-sm font-semibold">Dados opcionais para atendimento</legend>
+          <label className="grid gap-2 text-sm">Data de nascimento<Input type="date" value={form.dataNascimento} onChange={e => updateField('dataNascimento', e.target.value)} autoComplete="bday" /></label>
+          <label className="grid gap-2 text-sm">Telefone<Input type="tel" maxLength={30} value={form.telefone} onChange={e => updateField('telefone', e.target.value)} autoComplete="tel" /></label>
+          <label className="grid gap-2 text-sm">Tipo sanguíneo<select className="rounded-xl border border-red-200 bg-white p-3" value={tipoSanguineo} onChange={e => {
+            const value = e.target.value
+            if (value === '' || value === 'A+' || value === 'A-' || value === 'B+' || value === 'B-' || value === 'AB+' || value === 'AB-' || value === 'O+' || value === 'O-') setTipoSanguineo(value)
+          }}>
+            <option value="">Não informado</option>
+            {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map(value => <option key={value}>{value}</option>)}
+          </select></label>
+        </fieldset>
 
         <label className="grid gap-2 text-sm font-semibold text-zinc-700">
           Senha
@@ -164,9 +223,9 @@ export function Cadastro({ onCadastroSucesso, onIrParaLogin }: CadastroProps) {
           </span>
         </label>
 
-        <p className="text-xs text-zinc-600">Perfil: <strong>Doador</strong> · Status: <strong>Ativo</strong></p>
+        <p className="text-xs text-zinc-600">Perfil: <strong>{perfil === 'ENFERMEIRO' ? 'Enfermeiro(a)' : 'Doador(a)'}</strong> · Cadastro: <strong>{perfil === 'ENFERMEIRO' ? 'Sujeito à aprovação administrativa' : 'Ativo'}</strong></p>
         {erro && <p className="rounded-xl bg-red-100 px-3 py-2 text-sm text-red-800" role="alert">{erro}</p>}
-        {sucesso && <p className="rounded-xl bg-emerald-100 px-3 py-2 text-sm text-emerald-800" role="status">Cadastro realizado com sucesso.</p>}
+        {sucesso && <p className="rounded-xl bg-emerald-100 px-3 py-2 text-sm text-emerald-800" role="status">{aprovacaoPendente ? 'Solicitação de cadastro enviada. Aguarde a aprovação administrativa do COREN antes de fazer login.' : 'Cadastro realizado com sucesso.'}</p>}
         <Button type="submit" disabled={carregando}>
           <UserPlus size={16} />
           {carregando ? 'Cadastrando...' : 'Cadastrar'}
@@ -175,7 +234,7 @@ export function Cadastro({ onCadastroSucesso, onIrParaLogin }: CadastroProps) {
 
       <div className="mt-4 grid gap-2">
         <Button variant="ghost" type="button" onClick={onIrParaLogin}>Já tenho uma conta</Button>
-        {sucesso && <Button variant="secondary" type="button" onClick={onIrParaLogin}>Ir para o login</Button>}
+        {sucesso && !aprovacaoPendente && <Button variant="secondary" type="button" onClick={onIrParaLogin}>Ir para o login</Button>}
         <Button variant="ghost" size="sm" type="button" onClick={onCadastroSucesso}>Voltar</Button>
       </div>
 

@@ -14,16 +14,16 @@ import {
   formatarDadosTitular,
 } from '../utils/privacyFormatters'
 import { downloadExportacaoTitularPdf } from '../utils/privacyExportPdf'
+import { dataAtendimento } from '../utils/triagemFormatters'
 
 interface PrivacidadeProps {
-  email: string
   onContaRemovida: () => void
   onVoltar?: () => void
   embedded?: boolean
 }
 
 // Centraliza os fluxos de direitos do titular (consulta, exportacao, revogacao e exclusao).
-export function Privacidade({ email, onVoltar, onContaRemovida, embedded = false }: PrivacidadeProps) {
+export function Privacidade({ onVoltar, onContaRemovida, embedded = false }: PrivacidadeProps) {
   const [dados, setDados] = useState<DadosTitular | null>(null)
   const [finalidade, setFinalidade] = useState('seguranca')
   const [mensagem, setMensagem] = useState('')
@@ -37,7 +37,7 @@ export function Privacidade({ email, onVoltar, onContaRemovida, embedded = false
     setMensagem('')
     setCarregando(true)
     try {
-      const payload = await consultarMeusDados(email)
+      const payload = await consultarMeusDados()
       setDados(payload)
       setMensagem('Dados do titular carregados com sucesso.')
     } catch (error) {
@@ -53,7 +53,7 @@ export function Privacidade({ email, onVoltar, onContaRemovida, embedded = false
     setMensagem('')
     setCarregando(true)
     try {
-      const payload = await exportarMeusDados(email)
+      const payload = await exportarMeusDados()
       await downloadExportacaoTitularPdf(payload)
       setMensagem('Download do PDF concluido com sucesso.')
     } catch (error) {
@@ -69,10 +69,10 @@ export function Privacidade({ email, onVoltar, onContaRemovida, embedded = false
     setMensagem('')
     setCarregando(true)
     try {
-      await revogarConsentimento(email, { finalidade })
+      await revogarConsentimento({ finalidade })
       setMensagem(`Consentimento revogado para a finalidade: ${finalidade}.`)
       if (dados) {
-        const atualizado = await consultarMeusDados(email)
+        const atualizado = await consultarMeusDados()
         setDados(atualizado)
       }
     } catch (error) {
@@ -91,7 +91,7 @@ export function Privacidade({ email, onVoltar, onContaRemovida, embedded = false
     setMensagem('')
     setCarregando(true)
     try {
-      const response = await excluirMeusDados(email)
+      const response = await excluirMeusDados()
       setMensagem(response.mensagem)
       onContaRemovida()
     } catch (error) {
@@ -151,8 +151,33 @@ export function Privacidade({ email, onVoltar, onContaRemovida, embedded = false
             <dd className="text-zinc-700">{dadosFormatados?.email}</dd>
             <dt className="font-semibold text-red-800">Perfil</dt>
             <dd className="text-zinc-700">{dadosFormatados?.perfil}</dd>
+            <dt className="font-semibold text-red-800">Nascimento</dt>
+            <dd className="text-zinc-700">{dadosFormatados?.dataNascimento}</dd>
+            <dt className="font-semibold text-red-800">Telefone</dt>
+            <dd className="text-zinc-700">{dadosFormatados?.telefone}</dd>
+            <dt className="font-semibold text-red-800">Tipo sanguíneo</dt>
+            <dd className="text-zinc-700">{dadosFormatados?.tipoSanguineo}</dd>
+            {dados.coren_numero && <>
+              <dt className="font-semibold text-red-800">COREN</dt>
+              <dd className="text-zinc-700">{dadosFormatados?.coren}</dd>
+            </>}
           </dl>
 
+          <h2 className="mt-5 text-lg font-semibold text-zinc-900">Atendimentos e pré-triagem</h2>
+          {dados.atendimentos.length === 0 ? <p className="mt-3 text-sm">Nenhum atendimento registrado.</p> : <div className="mt-3 grid gap-3">
+            {dados.atendimentos.map((item, index) => <article key={index} className="rounded-xl border border-red-100 p-3 text-sm">
+              <p>Agendamento: {dataAtendimento(item.agendado_em)}</p>
+              <p>Status: {item.status} · Resultado: {item.resultado ?? '-'}</p>
+              <p className="whitespace-pre-wrap">Observações: {item.observacoes ?? '-'}</p>
+              {item.pre_triagem.map((resposta, i) => <p key={i} className="mt-2 whitespace-pre-wrap">{resposta.pergunta}: {resposta.resposta}</p>)}
+              {item.alteracoes.length > 0 && <ul className="mt-3 space-y-2" aria-label="Alterações da reserva">
+                {item.alteracoes.map((alteracao, i) => <li key={i}>
+                  {dataAtendimento(alteracao.ocorrido_em)} — {alteracao.acao.toLowerCase().replaceAll('_', ' ')}
+                  {alteracao.acao === 'REMARCADO' && alteracao.agendado_novo && <>: de {dataAtendimento(alteracao.agendado_anterior)} para {dataAtendimento(alteracao.agendado_novo)}</>}
+                </li>)}
+              </ul>}
+            </article>)}
+          </div>}
           <h2 className="mt-5 text-lg font-semibold text-zinc-900">Consentimentos</h2>
           <div className="mt-3 grid gap-3">
             {formatarConsentimentos(dados.consentimentos).map((item) => (

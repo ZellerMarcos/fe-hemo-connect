@@ -35,15 +35,23 @@ body {
   box-shadow: 0 1.5rem 3rem rgba(92, 35, 37, 0.08);
 }
 
-.home-brand {
-  display: inline-block;
-  margin-bottom: 2rem;
-  color: #b42332;
-  font-family: 'Trebuchet MS', sans-serif;
-  font-size: 0.95rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+.brand-logo {
+  display: block;
+  width: min(100%, 22rem);
+  height: auto;
+  object-fit: contain;
+}
+
+.brand-logo--compact {
+  width: min(100%, 18rem);
+}
+
+.agenda-radio {
+  width: 1rem;
+  height: 1rem;
+  padding: 0;
+  flex: none;
+  accent-color: #b42332;
 }
 
 .home-description {

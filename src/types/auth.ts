@@ -31,6 +31,9 @@ export interface TwoFactorVerifyRequest {
 export interface TwoFactorVerifyResponse {
   authenticated: boolean
   nome: string
+  usuario: LoginUserResponse
+  access_token: string
+  token_type: 'bearer'
 }
 
 // O pedido de recuperação de senha informa ao backend o e-mail que deve receber o link seguro.

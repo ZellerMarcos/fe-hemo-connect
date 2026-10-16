@@ -2,6 +2,7 @@ import { UserRound } from 'lucide-react'
 import { motion } from 'motion/react'
 
 import { Button } from '../components/ui/button'
+import { BrandLogo } from '../components/BrandLogo'
 import { Privacidade } from './Privacidade'
 import type { LoginUserResponse } from '../types/auth'
 
@@ -16,6 +17,7 @@ export function MeuPerfil({ usuario, onVoltarHome, onContaRemovida }: MeuPerfilP
   return (
     <section className="w-full max-w-5xl" aria-labelledby="meu-perfil-title">
       <header className="rounded-2xl border border-red-100 bg-white/90 p-6 shadow-lg shadow-red-100/30 md:p-8">
+        <BrandLogo compact className="mb-4" />
         <div className="flex items-start justify-between gap-4">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-red-700">Meu Perfil</p>
@@ -47,7 +49,7 @@ export function MeuPerfil({ usuario, onVoltarHome, onContaRemovida }: MeuPerfilP
       </motion.article>
 
       <div className="mt-4 rounded-2xl border border-red-100 bg-white/90 p-3 shadow-lg shadow-red-100/20 md:p-4">
-        <Privacidade email={usuario.email} onContaRemovida={onContaRemovida} embedded />
+        <Privacidade onContaRemovida={onContaRemovida} embedded />
       </div>
 
       <footer className="mt-3 flex justify-end">

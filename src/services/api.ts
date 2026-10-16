@@ -1,3 +1,5 @@
+import { clearAccessToken, getAccessToken } from './session'
+
 function resolveApiUrl(): string {
   const configuredUrl = import.meta.env.VITE_API_URL?.trim()
   if (!configuredUrl) {
@@ -24,26 +26,29 @@ const API_URL = resolveApiUrl()
 // A função request centraliza a comunicação HTTP da aplicação, padronizando URL base, headers e tratamento de erros do backend.
 export async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   // Centralizar o fetch mantém a URL base, os headers e o padrão de tratamento de erros em um único ponto.
+  const headers = new Headers(options.headers)
+  headers.set('Content-Type', 'application/json')
+  const token = getAccessToken()
+  if (token) headers.set('Authorization', `Bearer ${token}`)
   const response = await fetch(`${API_URL}${path}`, {
     ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
+    headers,
   })
 
   if (!response.ok) {
     // O cliente transforma qualquer falha HTTP em uma exceção padronizada para as páginas.
     let message = 'Não foi possível concluir a operação.'
     try {
-      const body = await response.json()
-      if (body?.detail) message = body.detail
+      const body: { detail?: unknown } = await response.json()
+      if (response.status < 500 && typeof body.detail === 'string') message = body.detail
+      if (response.status === 422 && Array.isArray(body.detail)) message = 'Verifique os campos informados e tente novamente.'
       // Qualquer 401 em rotas protegidas sinaliza sessão inválida ou expirada; o app reage redirecionando para o login.
-      if (response.status === 401 && body?.detail && !path.includes('/auth/login') && !path.includes('/auth/2fa')) {
-        window.dispatchEvent(new CustomEvent('session-expired'))
-      }
-    } catch {
-      // Se o backend não devolver JSON, a mensagem genérica continua sendo útil para o usuário.
+    } catch (error) {
+      if (!(error instanceof SyntaxError)) throw error
+    }
+    if (response.status === 401 && !path.includes('/auth/login') && !path.includes('/auth/2fa')) {
+      clearAccessToken()
+      window.dispatchEvent(new CustomEvent('session-expired'))
     }
     throw new Error(message)
   }

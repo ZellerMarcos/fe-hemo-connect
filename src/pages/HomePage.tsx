@@ -1,3 +1,5 @@
+import { BrandLogo } from '../components/BrandLogo'
+
 interface HomePageProps {
   nome: string
   onEntrar: () => void
@@ -9,7 +11,7 @@ export function HomePage({ nome, onEntrar }: HomePageProps) {
 
   return (
     <section className="home-landing" aria-labelledby="welcome-title">
-      <div className="home-brand">Hemo Connect</div>
+      <BrandLogo className="mb-8" />
 
       <h1 id="welcome-title">Olá, {primeiroNome}.</h1>
 

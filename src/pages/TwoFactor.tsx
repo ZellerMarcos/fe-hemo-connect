@@ -3,12 +3,15 @@ import { FormEvent, useEffect, useRef, useState } from 'react'
 import { ArrowLeft, ShieldCheck } from 'lucide-react'
 
 import { Button } from '../components/ui/button'
+import { BrandLogo } from '../components/BrandLogo'
 import { Input } from '../components/ui/input'
 import { verifyTwoFactor } from '../services/auth'
+import { setAccessToken } from '../services/session'
+import type { LoginUserResponse } from '../types/auth'
 
 interface TwoFactorProps {
   email: string
-  onSucesso: (nome: string) => void
+  onSucesso: (usuario: LoginUserResponse) => void
   onVoltar: () => void
 }
 
@@ -43,7 +46,8 @@ export function TwoFactor({ email, onSucesso, onVoltar }: TwoFactorProps) {
         return
       }
       // A aprovação do 2FA libera o acesso à área logada do sistema.
-      onSucesso(response.nome || email.split('@')[0] || 'Usuário')
+      setAccessToken(response.access_token)
+      onSucesso(response.usuario)
     } catch (error) {
       // Mensagens de erro do backend são repassadas para manter o usuário informado.
       setErro(error instanceof Error ? error.message : 'Código de verificação inválido.')
@@ -55,7 +59,7 @@ export function TwoFactor({ email, onSucesso, onVoltar }: TwoFactorProps) {
   return (
     <section className="w-full max-w-lg rounded-2xl border border-red-100 bg-white/92 p-6 shadow-2xl shadow-red-100/40 md:p-8" aria-labelledby="two-factor-title">
       <div>
-        <p className="text-xs font-bold uppercase tracking-[0.16em] text-red-700">Hemo Connect</p>
+        <BrandLogo />
         <h1 id="two-factor-title" className="mt-3 text-3xl font-semibold text-zinc-900 md:text-4xl">Verificação</h1>
         <p className="mt-3 text-sm leading-relaxed text-zinc-600 md:text-base">Enviamos um código de 6 dígitos para o seu e-mail.</p>
         <p className="mt-1 text-sm text-zinc-500">Verifique sua caixa de entrada e Spam.</p>
