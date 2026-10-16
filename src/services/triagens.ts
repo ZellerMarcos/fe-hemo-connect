@@ -1,6 +1,7 @@
 import { request } from './api'
-import type { Agendamento, FilaResponse, HistoricoItem, Indicadores, RespostaPreTriagem, ResultadoTriagem, TriagemDetalhe } from '../types/triagem'
+import type { Agendamento, FilaResponse, HistoricoItem, Indicadores, ResultadoTriagem, TriagemDetalhe } from '../types/triagem'
 import type { Reserva } from '../types/agenda'
+import type { QuestionarioEnvio } from '../types/questionario'
 
 export function consultarIndicadores(signal?: AbortSignal) {
   return request<Indicadores>('/triagens/indicadores', { signal })
@@ -48,6 +49,6 @@ export function meuHistorico(signal?: AbortSignal) {
   return request<HistoricoItem[]>('/historico/me', { signal })
 }
 
-export function agendar(data: { horario_id: number; chave_requisicao: string; respostas_pre_triagem: RespostaPreTriagem[] }) {
+export function agendar(data: { horario_id: number; chave_requisicao: string; questionario: QuestionarioEnvio }) {
   return request<Reserva>('/agendamentos', { method: 'POST', body: JSON.stringify(data) })
 }

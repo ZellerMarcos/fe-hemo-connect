@@ -3,12 +3,15 @@ import type { FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { Button } from '../components/ui/button'
-import { Input } from '../components/ui/input'
+import { FormularioPreTriagem, ResumoPreTriagem } from '../components/FormularioPreTriagem'
+import type { FormularioPreTriagemHandle } from '../components/FormularioPreTriagem'
 import { SeletorHorario } from '../components/SeletorHorario'
 import { agendar, meusAgendamentos, meuHistorico } from '../services/triagens'
 import { cancelarReserva, remarcarReserva } from '../services/agenda'
 import { listarHemocentros } from '../services/hemocentros'
-import type { HistoricoItem, RespostaPreTriagem } from '../types/triagem'
+import type { HistoricoItem } from '../types/triagem'
+import type { CatalogoPreTriagem, RespostasQuestionario } from '../types/questionario'
+import { consultarQuestionario, montarQuestionario } from '../services/questionario'
 import type { HorarioDisponivel, Reserva } from '../types/agenda'
 import type { Hemocentro } from '../types/hemocentro'
 import { dataAtendimento, mensagemErro, STATUS_LABELS } from '../utils/triagemFormatters'
@@ -22,7 +25,13 @@ export function Agendamentos() {
   const [centro, setCentro] = useState('')
   const [horario, setHorario] = useState<HorarioDisponivel | null>(null)
   const [fusoHorario, setFusoHorario] = useState<string | null>(null)
-  const [respostas, setRespostas] = useState<RespostaPreTriagem[]>([])
+  const [respostas, setRespostas] = useState<RespostasQuestionario>({})
+  const [confirmacoes, setConfirmacoes] = useState<string[]>([])
+  const [catalogo, setCatalogo] = useState<CatalogoPreTriagem | null>(null)
+  const [erroCatalogo, setErroCatalogo] = useState('')
+  const [carregandoCatalogo, setCarregandoCatalogo] = useState(true)
+  const [revisaoCatalogo, setRevisaoCatalogo] = useState(0)
+  const formulario = useRef<FormularioPreTriagemHandle>(null)
   const [erroDados, setErroDados] = useState('')
   const [erroAcao, setErroAcao] = useState('')
   const [mensagem, setMensagem] = useState('')
@@ -33,13 +42,56 @@ export function Agendamentos() {
   const [remarcando, setRemarcando] = useState<Reserva | null>(null)
   const requisicao = useRef<{ conteudo: string; chave: string } | null>(null)
 
-  useUnsavedChanges(respostas.length > 0 || revisando || remarcando !== null,
+  const formularioSujo = Object.keys(respostas).length > 0 || confirmacoes.length > 0
+
+  useUnsavedChanges(formularioSujo || revisando || remarcando !== null,
     'Sair e descartar os dados ainda não enviados? Reservas existentes permanecem válidas.')
+
+  useEffect(() => {
+    if (!formularioSujo && !revisando && !remarcando) return
+    const indiceAtual: unknown = window.history.state?.idx
+    if (typeof indiceAtual !== 'number') return
+    let restaurando = false
+    function protegerHistorico(event: PopStateEvent) {
+      if (restaurando) {
+        restaurando = false
+        event.stopImmediatePropagation()
+        return
+      }
+      const destino: unknown = event.state?.idx
+      if (typeof destino !== 'number' || destino === indiceAtual) return
+      if (window.confirm('Sair e descartar os dados ainda não enviados? Reservas existentes permanecem válidas.')) return
+      // Restaura o índice antes que o BrowserRouter desmonte o formulário.
+      event.stopImmediatePropagation()
+      restaurando = true
+      window.history.go((indiceAtual as number) - destino)
+    }
+    window.addEventListener('popstate', protegerHistorico, true)
+    return () => window.removeEventListener('popstate', protegerHistorico, true)
+  }, [formularioSujo, revisando, remarcando])
 
   const escolherHorario = useCallback((value: HorarioDisponivel | null) => {
     setHorario(value)
     setRevisando(false)
   }, [])
+
+  useEffect(() => {
+    const controller = new AbortController()
+    async function carregarCatalogo() {
+      setCarregandoCatalogo(true)
+      setErroCatalogo('')
+      try {
+        const resultado = await consultarQuestionario(controller.signal)
+        if (!controller.signal.aborted) setCatalogo(resultado)
+      } catch {
+        if (!controller.signal.aborted) setErroCatalogo('Não foi possível carregar o formulário de pré-triagem. Novas reservas estão indisponíveis. Seus dados preenchidos foram preservados.')
+      } finally {
+        if (!controller.signal.aborted) setCarregandoCatalogo(false)
+      }
+    }
+    void carregarCatalogo()
+    return () => controller.abort()
+  }, [revisaoCatalogo])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -84,11 +136,15 @@ export function Agendamentos() {
     setMensagem('')
     if (!horario || !centro) {
       setErroAcao('Escolha um hemocentro, um dia e um horário com vaga.')
+      document.getElementById('hemocentro-reserva')?.focus()
       return
     }
-    if (!remarcando && respostas.some(item => !item.pergunta.trim() || !item.resposta.trim())) {
-      setErroAcao('Preencha a pergunta e a resposta de cada item, ou remova o item vazio.')
-      return
+    if (!remarcando) {
+      if (!catalogo?.publicado || carregandoCatalogo || erroCatalogo) {
+        setErroAcao('O formulário está indisponível. Não é possível concluir uma nova reserva.')
+        return
+      }
+      if (!revisando && !formulario.current?.validar()) return
     }
     if (!revisando) {
       setRevisando(true)
@@ -108,18 +164,21 @@ export function Agendamentos() {
       } else {
         const data = {
           horario_id: horario.id,
-          respostas_pre_triagem: respostas.map(item => ({ pergunta: item.pergunta.trim(), resposta: item.resposta.trim() })),
+          questionario: montarQuestionario(catalogo!, respostas, confirmacoes),
         }
         const reserva = await agendar({ ...data, chave_requisicao: chave(JSON.stringify(data)) })
-        setMensagem(reserva.status === 'AGENDADO' ? 'Reserva registrada: Agendado. Na chegada, procure a recepção.'
+        setMensagem(reserva.status === 'AGENDADO' ? 'Agendamento confirmado. Suas respostas foram registradas para a equipe de saúde. A possibilidade de doar será avaliada no hemocentro. Na chegada, procure a recepção.'
           : 'Esta solicitação já foi processada. Confira a situação atual em Meus agendamentos.')
-        setRespostas([])
+        setRespostas({})
+        setConfirmacoes([])
         escolherHorario(null)
         requisicao.current = null
       }
       setRevisao(value => value + 1)
     } catch (error) {
-      setErroAcao(`${mensagemErro(error)} Confira seus agendamentos antes de repetir.`)
+      setErroAcao(remarcando
+        ? `${mensagemErro(error)} Confira seus agendamentos antes de repetir.`
+        : 'Não foi possível confirmar a reserva. Suas respostas foram preservadas. Confira seus agendamentos antes de repetir. Se o questionário foi atualizado, descarte o preenchimento e recarregue o formulário.')
       setRevisao(value => value + 1)
     } finally {
       setOcupado(false)
@@ -166,10 +225,11 @@ export function Agendamentos() {
       {remarcando && <aside className="space-y-2 rounded-xl bg-amber-50 p-4 text-amber-900">
         <p>Reserva atual: {dataAtendimento(remarcando.agendado_em, remarcando.fuso_horario)}. Ela permanece válida se o novo horário ficar sem vagas.</p>
         <p>A remarcação é na mesma unidade e preserva suas respostas de pré-triagem.</p>
+        <p>Informe à equipe qualquer mudança de saúde desde o preenchimento original.</p>
         <Button variant="secondary" disabled={ocupado} onClick={encerrarRemarcacao}>Desistir da remarcação</Button>
       </aside>}
       <label className="grid min-w-0 gap-2">Hemocentro
-        <select required disabled={ocupado || carregando || !!erroDados || !!remarcando}
+        <select id="hemocentro-reserva" required disabled={ocupado || carregando || !!erroDados || !!remarcando}
           className="min-h-11 w-full min-w-0 rounded-xl border border-red-200 bg-white p-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300"
           value={centro} onChange={event => { setCentro(event.target.value); escolherHorario(null); setErroAcao('') }}>
           <option value="">Selecione uma unidade</option>
@@ -184,25 +244,31 @@ export function Agendamentos() {
       {centro && <SeletorHorario key={centro} centroId={Number(centro)} selecionado={horario}
         onSelecionar={escolherHorario} onFusoHorario={setFusoHorario} horarioAtualId={remarcando?.horario_id}
         disabled={ocupado || carregando || !!erroDados} revisao={revisao} />}
-      {!remarcando && <fieldset className="min-w-0 space-y-3" disabled={ocupado || revisando}>
-        <legend className="font-semibold">Respostas de pré-triagem</legend>
-        <p className="text-sm text-zinc-600">Registre apenas perguntas e respostas do questionário oficial da instituição. Se não recebeu um, não invente perguntas: confirme as orientações com a unidade.</p>
-        {respostas.map((item, index) => <div key={index} className="grid min-w-0 gap-2 rounded-xl bg-rose-50 p-3">
-          <label className="grid min-w-0 gap-1">Pergunta {index + 1}<Input required maxLength={500} value={item.pergunta} onChange={event => setRespostas(respostas.map((row, i) => i === index ? { ...row, pergunta: event.target.value } : row))} /></label>
-          <label className="grid min-w-0 gap-1">Resposta {index + 1}<textarea required maxLength={2000} className="min-w-0 rounded-xl border border-red-200 p-3" value={item.resposta} onChange={event => setRespostas(respostas.map((row, i) => i === index ? { ...row, resposta: event.target.value } : row))} /></label>
-          <Button variant="ghost" onClick={() => setRespostas(respostas.filter((_, i) => i !== index))}>Remover item {index + 1}</Button>
-        </div>)}
-        <Button variant="secondary" disabled={respostas.length >= 100} onClick={() => setRespostas([...respostas, { pergunta: '', resposta: '' }])}>Adicionar resposta institucional</Button>
-      </fieldset>}
+      {!remarcando && <>
+        {carregandoCatalogo && <p role="status">Carregando formulário de pré-triagem...</p>}
+        {erroCatalogo && <p role="alert" className="rounded-xl bg-red-50 p-4 text-red-800">{erroCatalogo}</p>}
+        {!carregandoCatalogo && !erroCatalogo && catalogo && !catalogo.publicado && <aside role="status" className="space-y-2 rounded-xl bg-amber-50 p-4 text-amber-900">
+          <p>Formulário de pré-triagem indisponível: o questionário ainda não está publicado. Novas reservas estão temporariamente indisponíveis. Você pode consultar, cancelar ou remarcar reservas existentes.</p>
+          <p className="whitespace-pre-wrap">{catalogo.aviso}</p>
+        </aside>}
+        {catalogo?.publicado && !erroCatalogo && !carregandoCatalogo && !revisando && <FormularioPreTriagem ref={formulario}
+          catalogo={catalogo} respostas={respostas} confirmacoes={confirmacoes}
+          onRespostas={setRespostas} onConfirmacoes={setConfirmacoes} disabled={ocupado} />}
+        {!revisando && <Button variant="secondary" disabled={ocupado || carregandoCatalogo} onClick={() => {
+          if (formularioSujo && !window.confirm('Descartar respostas e confirmações não enviadas e carregar o questionário atual?')) return
+          setRespostas({}); setConfirmacoes([]); setCatalogo(null); requisicao.current = null
+          setRevisaoCatalogo(value => value + 1)
+        }}>{erroCatalogo ? 'Tentar novamente' : formularioSujo ? 'Descartar preenchimento e atualizar formulário' : 'Atualizar formulário'}</Button>}
+      </>}
       {revisando && horario && unidade && <section aria-labelledby="revisao-reserva-title" className="space-y-3 rounded-xl bg-red-50 p-4 text-red-900">
         <h3 id="revisao-reserva-title" className="font-semibold">Revise antes de confirmar</h3>
         <p>{unidade.nome} — {unidade.endereco}</p>
         <p>{dataAtendimento(horario.inicio, fusoHorario)} — {fusoHorario}. Confira a data e o horário da unidade.</p>
-        {!remarcando && respostas.length > 0 && <dl className="space-y-2">{respostas.map((item, index) => <div key={index}><dt className="font-semibold">{item.pergunta}</dt><dd>{item.resposta}</dd></div>)}</dl>}
+        {!remarcando && catalogo && <ResumoPreTriagem catalogo={catalogo} respostas={respostas} confirmacoes={confirmacoes} />}
         <p className="text-sm">A disponibilidade será conferida novamente. As respostas não poderão ser editadas depois do envio.</p>
         <Button variant="secondary" disabled={ocupado} onClick={() => setRevisando(false)}>Voltar para editar</Button>
       </section>}
-      <Button type="submit" disabled={ocupado || carregando || !!erroDados || !horario} className="w-full sm:w-fit">
+      <Button type="submit" disabled={ocupado || carregando || !!erroDados || !horario || (!remarcando && (carregandoCatalogo || !!erroCatalogo || !catalogo?.publicado))} className="w-full sm:w-fit">
         {ocupado ? 'Confirmando...' : revisando ? remarcando ? 'Confirmar remarcação' : 'Confirmar reserva' : 'Revisar reserva'}
       </Button>
     </form>

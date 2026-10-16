@@ -9,7 +9,7 @@ interface PrivacyPolicyModalProps {
   readComplete: boolean
 }
 
-const POLICY_VERSION = 'v1.2'
+const POLICY_VERSION = 'v1.3'
 
 const policyPurposes = [
   'Criar e manter o cadastro do usuário',
@@ -35,6 +35,8 @@ const donationData = [
   'Respostas ao questionário de saúde',
   'Informações sobre utilização de medicamentos, quando informadas',
   'Informações sobre vacinação, quando informadas',
+  'Informações íntimas de saúde, como gestação, amamentação, histórico reprodutivo e uso de PrEP/PEP, quando informadas na pré-triagem',
+  'Versão do questionário e do aviso específico, data de envio e confirmações de ciência',
   'Informações necessárias para avaliação e atendimento no hemocentro',
 ]
 const securityData = [
@@ -157,6 +159,7 @@ export function PrivacyPolicyModal({ open, onClose, onReadComplete, readComplete
             <section>
               <h3 className="text-lg font-semibold text-zinc-900">4. Dados relacionados à saúde</h3>
               <p>O Hemo Connect pode tratar informações relacionadas à saúde fornecidas pelo usuário durante o processo de pré-triagem e atendimento.</p>
+              <p>O formulário inclui perguntas íntimas. Você pode escolher “Prefiro conversar com o profissional” nas alternativas previstas, sem impedir o agendamento. As respostas não determinam automaticamente aptidão para doar e não ficam salvas como rascunho no navegador. Consulte o aviso do formulário para identificar o controlador e o canal institucional de privacidade, solicitar correção após o envio e exercer seus direitos. A ciência desse aviso não representa autorização genérica para outros usos.</p>
               <p>Essas informações possuem caráter sensível e devem ser utilizadas exclusivamente quando necessárias para as finalidades relacionadas ao processo de doação e avaliação profissional.</p>
               <p>O acesso a essas informações deve ser limitado aos profissionais e usuários que possuam autorização compatível com sua função dentro do sistema.</p>
               <p>Por exemplo:</p>

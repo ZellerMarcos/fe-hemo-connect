@@ -47,6 +47,13 @@ export interface HistoricoItem {
   resultado: ResultadoTriagem
 }
 
+export interface MetadadosPreTriagem {
+  versao: string
+  versao_aviso: string
+  enviado_em: string
+  confirmacoes: string[]
+}
+
 export interface TriagemDetalhe {
   agendamento: Agendamento
   doador: {
@@ -58,6 +65,7 @@ export interface TriagemDetalhe {
     tipo_sanguineo: string | null
   }
   pre_triagem: RespostaPreTriagem[]
+  questionario: MetadadosPreTriagem | null
   historico: HistoricoItem[]
   avaliacao: {
     enfermeiro_id: number

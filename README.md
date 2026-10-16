@@ -158,6 +158,40 @@ a pagina; o seletor de horarios oferece estados de carregamento, vazio e erro.
 
 ## Seguranca
 
+### Formulário de pré-triagem no agendamento
+
+Novas reservas exigem o formulário estruturado e as confirmações do catálogo
+autenticado `GET /questionario-pre-triagem`. O catálogo fornece versões, aviso,
+perguntas, alternativas e dependências; não há edição livre de perguntas nem
+decisão automática de aptidão. Se o catálogo falhar, use **Tentar novamente**.
+Se `publicado=false`, somente novas reservas ficam indisponíveis: consulta,
+cancelamento e remarcação continuam disponíveis. A publicação depende da
+validação institucional e da configuração do backend.
+
+Abra **Formulário de pré-triagem — Obrigatório**, acompanhe o progresso e
+responda às perguntas aplicáveis. Campos condicionais ocultos são removidos
+recursivamente. Número e data aceitam **Não sei informar**; os limites são
+apenas técnicos (número maior que zero até 999,9; data até hoje UTC; texto até
+2000 caracteres). Alternativas exclusivas de seleção múltipla limpam as demais.
+Ao revisar com pendências, o formulário abre e o primeiro erro recebe foco.
+O resumo mantém as respostas confidenciais recolhidas inicialmente.
+
+Respostas e confirmações ficam somente na memória da página, inclusive ao
+revisar/editar ou após falha de envio. A política abre em modal sem descartar
+o formulário. Sair ou recarregar usa o aviso de alterações não enviadas;
+o descarte explícito requer confirmação. Não há rascunho em armazenamento
+do navegador. Após sucesso, os dados preenchidos são limpos.
+
+`POST /agendamentos` envia `horario_id`, `chave_requisicao` e
+`questionario: {versao, versao_aviso, respostas: [{id, valores: string[]}],
+confirmacoes: string[]}`. IDs e rótulos derivam do catálogo; os enunciados não
+são enviados. Publique com o backend deste contrato. Remarcações preservam
+as respostas originais, inclusive legadas, sem exigir um novo questionário.
+Mudanças de saúde devem ser comunicadas à equipe presencialmente.
+Se a versão for rejeitada, confira suas reservas antes de repetir e use
+**Descartar preenchimento e atualizar formulário** para revisar o novo catálogo;
+respostas não são reaproveitadas silenciosamente entre versões.
+
 O botao **Hemocentros** aparece no cabecalho para administradores e enfermeiros.
 O cadastro exige nome, endereco, telefone e situacao (`ATIVO` ou `INATIVO`).
 O backend valida a permissao e os limites dos campos; cadastrar uma unidade
