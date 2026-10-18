@@ -45,6 +45,16 @@ export function meusAgendamentos(signal?: AbortSignal) {
   return request<Reserva[]>('/agendamentos/me', { signal })
 }
 
+export function consultarProximoAgendamento(signal?: AbortSignal) {
+  return request<Reserva | null>('/agendamentos/proximo', { signal })
+}
+
+export function confirmarMinhaChegada(id: number, versao: number) {
+  return request<Reserva>(`/agendamentos/${id}/confirmar-chegada`, {
+    method: 'POST', body: JSON.stringify({ versao }),
+  })
+}
+
 export function meuHistorico(signal?: AbortSignal) {
   return request<HistoricoItem[]>('/historico/me', { signal })
 }

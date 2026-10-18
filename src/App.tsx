@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { CalendarPlus2, Building2, ShieldCheck } from 'lucide-react'
+import { CalendarPlus2, Building2, ClipboardCheck, ShieldCheck } from 'lucide-react'
 import { motion } from 'motion/react'
 import { Link, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { Button } from './components/ui/button'
@@ -14,6 +14,7 @@ import { TwoFactor } from './pages/TwoFactor'
 import type { LoginUserResponse } from './types/auth'
 import { AreaLogada } from './components/layout/AreaLogada'
 import { Agendamentos } from './pages/Agendamentos'
+import { ConfirmacaoChegada } from './pages/ConfirmacaoChegada'
 import { Enfermagem } from './pages/Enfermagem'
 import { Recepcao } from './pages/Recepcao'
 import { TriagemEnfermagem } from './pages/TriagemEnfermagem'
@@ -61,6 +62,13 @@ function AuthenticatedHome({
       icon: Building2,
       to: '/hemocentros',
       color: 'centros',
+    },
+    {
+      title: 'Confirmação de Chegada',
+      description: 'Já está no hemocentro? Confirme sua chegada para aguardar a triagem.',
+      icon: ClipboardCheck,
+      to: '/confirmacao-chegada',
+      color: 'agenda',
     },
   ]
 
@@ -234,6 +242,7 @@ function App() {
       <Route path="/agenda" element={usuario && ['ADMINISTRADOR', 'RESPONSAVEL_HEMOCENTRO'].includes(usuario.perfil) ? area('Agenda da unidade', <AgendaHemocentro usuario={usuario} />) : acessoNegado} />
       <Route path="/hemocentros/:id/horarios" element={usuario ? area('Horários da unidade', <HorariosHemocentro />) : acessoNegado} />
       <Route path="/agendamentos" element={usuario?.perfil === 'DOADOR' ? area('Agendamentos e histórico', <Agendamentos />) : acessoNegado} />
+      <Route path="/confirmacao-chegada" element={usuario?.perfil === 'DOADOR' ? area('Confirmação de Chegada', <ConfirmacaoChegada />) : acessoNegado} />
       <Route path="/perfil" element={usuario ? <AuthFrame><MeuPerfil usuario={usuario} onVoltarHome={() => navigate('/home')} onContaRemovida={contaRemovida} /></AuthFrame> : <Navigate to="/login" replace />} />
       {/* Rota protegida da central de privacidade; sem sessao ativa redireciona para login. */}
       <Route path="/privacidade" element={usuario ? <Navigate to="/perfil" replace /> : <Navigate to="/login" replace />} />
