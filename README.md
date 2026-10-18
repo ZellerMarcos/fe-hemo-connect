@@ -181,6 +181,27 @@ duplicados, inexistentes ou com unidade inativa apresentam uma mensagem e permit
 escolher outra unidade. O link não cria hemocentro nem confirma reserva; ainda
 é necessário escolher dia/horário e preencher/revisar a pré-triagem.
 
+### Confirmação de chegada pelo doador
+
+O cartão **Confirmação de Chegada** da `/home` abre `/confirmacao-chegada`,
+exclusivamente para o perfil DOADOR. A página consulta
+`GET /agendamentos/proximo` e exibe a unidade, endereço, data/hora, fuso e status
+da próxima reserva futura ainda agendada e sem chegada confirmada. Reservas
+passadas, canceladas e já recebidas não são oferecidas.
+
+**Confirmar minha chegada** pede a autodeclaração de presença e envia
+`POST /agendamentos/{id}/confirmar-chegada` com a versão exibida. Não há
+restrição de antecedência nem validação por localização ou QR Code: confirme
+somente quando estiver no hemocentro. A ação muda o status para
+**Aguardando triagem**, libera a consulta pela enfermagem autorizada da unidade
+e impede cancelar/remarcar a reserva. A recepção mantém seu fluxo existente.
+
+A página oferece carregamento, estado vazio, confirmação e erros com nova
+consulta. Após uma falha no envio, é necessário atualizar antes de tentar
+confirmar novamente, pois a reserva pode ter mudado. A fila da enfermagem precisa
+ser atualizada; não há atualização em tempo real. Publique frontend e backend
+com os novos endpoints juntos.
+
 ### Formulário de pré-triagem no agendamento
 
 Novas reservas exigem o formulário estruturado e as confirmações do catálogo
