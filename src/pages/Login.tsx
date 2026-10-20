@@ -1,4 +1,4 @@
-import { FormEvent, useState } from 'react'
+import { FormEvent, useEffect, useRef, useState } from 'react'
 
 import { Eye, EyeOff, KeyRound, LifeBuoy, LogIn, MailCheck, UserPlus2 } from 'lucide-react'
 
@@ -6,22 +6,27 @@ import { Button } from '../components/ui/button'
 import { BrandLogo } from '../components/BrandLogo'
 import { Input } from '../components/ui/input'
 import { entrar } from '../services/auth'
-import type { LoginUserResponse } from '../types/auth'
+import type { LoginTwoFactorResponse } from '../types/auth'
 
 interface LoginProps {
-  onLoginSucesso: (usuario: LoginUserResponse) => void
-  onTwoFactor: (email: string) => void
+  onTwoFactor: (challenge: LoginTwoFactorResponse) => void
   onIrParaCadastro: () => void
   onEsqueciSenha: () => void
   mensagemSessaoExpirada?: string
 }
 
-export function Login({ onLoginSucesso, onTwoFactor, onIrParaCadastro, onEsqueciSenha, mensagemSessaoExpirada }: LoginProps) {
+export function Login({ onTwoFactor, onIrParaCadastro, onEsqueciSenha, mensagemSessaoExpirada }: LoginProps) {
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
   const [mostrarSenha, setMostrarSenha] = useState(false)
   const [erro, setErro] = useState('')
   const [carregando, setCarregando] = useState(false)
+  const activeRef = useRef(true)
+
+  useEffect(() => {
+    activeRef.current = true
+    return () => { activeRef.current = false }
+  }, [])
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     // A submissão valida primeiro o formulário local e então repassa a requisição ao backend.
@@ -37,19 +42,24 @@ export function Login({ onLoginSucesso, onTwoFactor, onIrParaCadastro, onEsqueci
     try {
       // O backend responde com 2FA quando a credencial é válida, antes de concluir a sessão.
       const response = await entrar({ email, senha })
-      if ('requires_2fa' in response) {
-        // O usuário precisa confirmar a segunda etapa antes de ser considerado autenticado.
-        onTwoFactor(email)
-        return
+      if (!activeRef.current) return
+      if (
+        !response.requires_2fa || !/^[0-9a-f]{32}$/.test(response.challenge_id) ||
+        !/^[A-Za-z0-9_-]{43}$/.test(response.challenge_secret) ||
+        !Number.isFinite(response.expires_in) || response.expires_in <= 0 ||
+        response.expires_in > 300
+      ) {
+        throw new Error('A API não retornou um desafio de verificação válido. Reinicie o login.')
       }
-      // O fluxo de login completo gera a sessão e leva o usuário diretamente à área logada.
-      onLoginSucesso(response)
+      setSenha('')
+      onTwoFactor(response)
     } catch (error) {
+      if (!activeRef.current) return
       // O frontend reutiliza a mensagem detalhada do backend, inclusive o número de tentativas restantes e o bloqueio do usuário.
       const mensagem = error instanceof Error ? error.message : 'E-mail ou senha inválidos.'
       setErro(mensagem)
     } finally {
-      setCarregando(false)
+      if (activeRef.current) setCarregando(false)
     }
   }
 

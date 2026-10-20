@@ -17,13 +17,21 @@ export interface LoginUserResponse {
 // O backend indica que a autenticação precisa de uma segunda etapa de confirmação em 2FA.
 export interface LoginTwoFactorResponse {
   requires_2fa: true
+  challenge_id: string
+  challenge_secret: string
+  expires_in: number
 }
 
-export type LoginResponse = LoginUserResponse | LoginTwoFactorResponse
+export type LoginResponse = LoginTwoFactorResponse
+
+export interface PendingTwoFactor extends LoginTwoFactorResponse {
+  expiresAt: number
+}
 
 // O código de verificação é enviado para o backend para confirmar a segunda etapa da autenticação.
 export interface TwoFactorVerifyRequest {
-  email: string
+  challenge_id: string
+  challenge_secret: string
   code: string
 }
 

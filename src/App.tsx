@@ -12,7 +12,7 @@ import { MeuPerfil } from './pages/MeuPerfil'
 import { ResetPassword } from './pages/ResetPassword'
 import { ConfirmEmailChange } from './pages/ConfirmEmailChange'
 import { TwoFactor } from './pages/TwoFactor'
-import type { LoginUserResponse } from './types/auth'
+import type { LoginUserResponse, PendingTwoFactor } from './types/auth'
 import { AreaLogada } from './components/layout/AreaLogada'
 import { Agendamentos } from './pages/Agendamentos'
 import { ConfirmacaoChegada } from './pages/ConfirmacaoChegada'
@@ -142,11 +142,19 @@ function App() {
   const navigate = useNavigate()
   const location = useLocation()
   const [usuario, setUsuario] = useState<LoginUserResponse | null>(null)
-  const [twoFactorEmail, setTwoFactorEmail] = useState('')
+  const [twoFactorChallenge, setTwoFactorChallenge] = useState<PendingTwoFactor | null>(null)
   const [mensagemSessaoExpirada, setMensagemSessaoExpirada] = useState('')
   const [restaurando, setRestaurando] = useState(() => !!getAccessToken())
   const [erroSessao, setErroSessao] = useState('')
   const [saindo, setSaindo] = useState(false)
+  const [previousPath, setPreviousPath] = useState(location.pathname)
+
+  if (previousPath !== location.pathname) {
+    setPreviousPath(location.pathname)
+    if (location.pathname !== '/two-factor' && twoFactorChallenge) {
+      setTwoFactorChallenge(null)
+    }
+  }
 
   useEffect(() => {
     let active = true
@@ -165,7 +173,7 @@ function App() {
       if (location.pathname === '/reset-password' || location.pathname === '/forgot-password') return
       setUsuario(null)
       clearAccessToken()
-      setTwoFactorEmail('')
+      setTwoFactorChallenge(null)
       setMensagemSessaoExpirada(MENSAGEM_SESSAO_EXPIRADA)
       navigate('/login', { replace: true })
     }
@@ -174,7 +182,23 @@ function App() {
     return () => window.removeEventListener('session-expired', handleSessionExpired)
   }, [location.pathname, navigate])
 
+  useEffect(() => {
+    if (!twoFactorChallenge) return
+    const clearChallenge = () => { setTwoFactorChallenge(null) }
+    const timer = window.setTimeout(() => {
+      clearChallenge()
+      setMensagemSessaoExpirada('A verificação expirou. Inicie o login novamente.')
+      if (location.pathname === '/two-factor') navigate('/login', { replace: true })
+    }, Math.max(0, twoFactorChallenge.expiresAt - Date.now()))
+    window.addEventListener('pagehide', clearChallenge)
+    return () => {
+      window.clearTimeout(timer)
+      window.removeEventListener('pagehide', clearChallenge)
+    }
+  }, [twoFactorChallenge, location.pathname, navigate])
+
   function handleLoginSucesso(loggedUser: LoginUserResponse) {
+    setTwoFactorChallenge(null)
     setMensagemSessaoExpirada('')
     setUsuario(loggedUser)
     setErroSessao('')
@@ -191,7 +215,7 @@ function App() {
     setSaindo(true); setErroSessao('')
     try {
       await sair()
-      clearAccessToken(); setUsuario(null); setTwoFactorEmail('')
+      clearAccessToken(); setUsuario(null); setTwoFactorChallenge(null)
       navigate('/login', { replace: true })
     } catch (error) {
       setErroSessao(error instanceof Error ? error.message : 'Não foi possível encerrar a sessão. Tente novamente.')
@@ -207,6 +231,7 @@ function App() {
   }
 
   function contaRemovida() {
+    setTwoFactorChallenge(null)
     clearAccessToken(); setUsuario(null)
     navigate('/login', { replace: true })
   }
@@ -226,13 +251,13 @@ function App() {
     {erroSessao && <p role="alert" className="border border-red-200 bg-red-50 p-4 text-red-800">{erroSessao}</p>}
     {saindo && <p role="status" className="p-4">Encerrando sessão...</p>}
     <Routes>
-      <Route path="/login" element={<AuthFrame><Login onLoginSucesso={handleLoginSucesso} onTwoFactor={(email) => { setTwoFactorEmail(email); navigate('/two-factor') }} onIrParaCadastro={() => navigate('/cadastro')} onEsqueciSenha={() => navigate('/forgot-password')} mensagemSessaoExpirada={mensagemSessaoExpirada} /></AuthFrame>} />
+      <Route path="/login" element={<AuthFrame><Login onTwoFactor={(challenge) => { setTwoFactorChallenge({ ...challenge, expiresAt: Date.now() + challenge.expires_in * 1000 }); navigate('/two-factor') }} onIrParaCadastro={() => { setTwoFactorChallenge(null); navigate('/cadastro') }} onEsqueciSenha={() => { setTwoFactorChallenge(null); navigate('/forgot-password') }} mensagemSessaoExpirada={mensagemSessaoExpirada} /></AuthFrame>} />
       <Route path="/forgot-password" element={<AuthFrame><ForgotPassword onVoltarAoLogin={() => navigate('/login')} /></AuthFrame>} />
       <Route path="/auth/forgot-password" element={<AuthFrame><ForgotPassword onVoltarAoLogin={() => navigate('/login')} /></AuthFrame>} />
       <Route path="/reset-password" element={<AuthFrame><ResetPassword token={new URLSearchParams(location.search).get('token') ?? ''} onVoltarAoLogin={() => navigate('/login')} /></AuthFrame>} />
       <Route path="/confirm-email" element={<AuthFrame><ConfirmEmailChange token={new URLSearchParams(location.search).get('token') ?? ''} onVoltarAoLogin={() => navigate('/login')} /></AuthFrame>} />
       <Route path="/cadastro" element={<AuthFrame><Cadastro onCadastroSucesso={() => navigate('/login')} onIrParaLogin={() => navigate('/login')} /></AuthFrame>} />
-      <Route path="/two-factor" element={twoFactorEmail ? <AuthFrame><TwoFactor email={twoFactorEmail} onSucesso={handleLoginSucesso} onVoltar={() => { setTwoFactorEmail(''); navigate('/login') }} /></AuthFrame> : <Navigate to="/login" replace />} />
+      <Route path="/two-factor" element={usuario ? <Navigate to="/home" replace /> : twoFactorChallenge ? <AuthFrame><TwoFactor challenge={twoFactorChallenge} onSucesso={handleLoginSucesso} onVoltar={() => { setTwoFactorChallenge(null); setMensagemSessaoExpirada('Inicie o login novamente para receber outro código.'); navigate('/login') }} /></AuthFrame> : <Navigate to="/login" replace />} />
       <Route path="/index.html" element={<ResetPasswordEntry />} />
       <Route path="/home" element={usuario ? nurseArea ? <Navigate to="/enfermeiro" replace /> : receptionArea ? <Navigate to="/recepcao" replace /> : usuario.perfil === 'DOADOR' ? <AuthenticatedHome usuario={usuario} onAbrirPerfil={abrirPerfil} onAgendamentos={() => navigate('/agendamentos')} onSair={() => void handleLogout()} /> : area('Área profissional', <p>O módulo do seu perfil não está disponível nesta versão.</p>) : <Navigate to="/login" replace />} />
       <Route path="/enfermeiro" element={nurseArea ? area('Triagem de Doadores', <Enfermagem />) : acessoNegado} />

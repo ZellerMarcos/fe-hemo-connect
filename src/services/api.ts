@@ -23,6 +23,13 @@ function resolveApiUrl(): string {
 
 const API_URL = resolveApiUrl()
 
+export class ApiError extends Error {
+  constructor(message: string, public readonly status: number) {
+    super(message)
+    this.name = 'ApiError'
+  }
+}
+
 const VALIDATION_FIELD_LABELS: Record<string, string> = {
   fuso_horario: 'Fuso horário',
   duracao_minutos: 'Duração do horário',
@@ -107,7 +114,13 @@ export async function request<T>(path: string, options: RequestInit = {}): Promi
       clearAccessToken()
       window.dispatchEvent(new CustomEvent('session-expired'))
     }
-    throw new Error(message)
+    if (response.status === 429) {
+      const retryAfter = response.headers.get('Retry-After')
+      if (retryAfter && /^\d+$/.test(retryAfter)) {
+        message += ` Tente novamente em ${retryAfter} segundos.`
+      }
+    }
+    throw new ApiError(message, response.status)
   }
 
   if (response.status === 204) return undefined as T

@@ -159,6 +159,27 @@ a pagina; o seletor de horarios oferece estados de carregamento, vazio e erro.
 
 ## Seguranca
 
+### Segundo fator sem chave global
+
+Depois da senha valida, o backend retorna `requires_2fa`, `challenge_id`,
+`challenge_secret` e `expires_in=300`, sem sessao autenticada. O codigo de
+seis digitos chega somente por e-mail. A verificacao envia identificador,
+segredo e codigo ao backend por HTTPS; so entao recebe a sessao.
+
+O desafio fica exclusivamente no estado React, nunca em URL, cookies,
+`localStorage` ou `sessionStorage`. Ele e apagado no sucesso, cancelamento,
+saida da tela e expiracao. Recarregar exige reiniciar o login. Respostas de
+login recebidas depois de sair da tela nao recriam o desafio.
+Cinco codigos incorretos com segredo valido invalidam o desafio; erros de
+limite (`429`) informam a espera indicada pelo backend.
+Nao registrar segredo, senha ou codigo em logs ou ferramentas de analise.
+
+Essa revisao substitui o contrato antigo de verificacao por e-mail/codigo.
+Publicar junto ao backend compativel e somente depois da migration 006 e da
+homologacao do proxy/HTTPS. Nenhuma nova variavel de ambiente e necessaria.
+O token de sessao autenticada continua em `sessionStorage`, separado do
+desafio temporario; a politica de sessao P0 nao foi substituida por refresh.
+
 ### Hemocentros para o doador
 
 O atalho **Hemocentros** da central e a navegação da área logada abrem uma visão
