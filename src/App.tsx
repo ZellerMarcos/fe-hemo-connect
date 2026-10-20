@@ -142,6 +142,7 @@ function App() {
   const navigate = useNavigate()
   const location = useLocation()
   const [usuario, setUsuario] = useState<LoginUserResponse | null>(null)
+  // Segredo pre-autenticacao somente em memoria: persistir permitiria retomar o 2FA apos reload.
   const [twoFactorChallenge, setTwoFactorChallenge] = useState<PendingTwoFactor | null>(null)
   const [mensagemSessaoExpirada, setMensagemSessaoExpirada] = useState('')
   const [restaurando, setRestaurando] = useState(() => !!getAccessToken())
@@ -149,6 +150,8 @@ function App() {
   const [saindo, setSaindo] = useState(false)
   const [previousPath, setPreviousPath] = useState(location.pathname)
 
+  // Limpa apenas quando a rota muda; o desafio pode chegar antes de navegar de login para 2FA.
+  // O ajuste guardado no render evita exibir um desafio antigo ao voltar pelo historico.
   if (previousPath !== location.pathname) {
     setPreviousPath(location.pathname)
     if (location.pathname !== '/two-factor' && twoFactorChallenge) {
@@ -184,12 +187,14 @@ function App() {
 
   useEffect(() => {
     if (!twoFactorChallenge) return
+    // O prazo local orienta a interface; a validade real continua sendo conferida pelo backend.
     const clearChallenge = () => { setTwoFactorChallenge(null) }
     const timer = window.setTimeout(() => {
       clearChallenge()
       setMensagemSessaoExpirada('A verificação expirou. Inicie o login novamente.')
       if (location.pathname === '/two-factor') navigate('/login', { replace: true })
     }, Math.max(0, twoFactorChallenge.expiresAt - Date.now()))
+    // Sair do documento tambem descarta o desafio, inclusive na navegacao fora da SPA.
     window.addEventListener('pagehide', clearChallenge)
     return () => {
       window.clearTimeout(timer)
@@ -198,6 +203,7 @@ function App() {
   }, [twoFactorChallenge, location.pathname, navigate])
 
   function handleLoginSucesso(loggedUser: LoginUserResponse) {
+    // A rota 2FA prioriza usuario autenticado sobre desafio: limpa-lo nao deve voltar ao login.
     setTwoFactorChallenge(null)
     setMensagemSessaoExpirada('')
     setUsuario(loggedUser)
@@ -237,6 +243,7 @@ function App() {
   }
 
   function area(titulo: string, content: React.ReactNode) {
+    // Esta guarda cuida da navegacao; perfil, unidade e autoria sao autorizados pela API.
     if (!usuario) return <Navigate to="/login" replace />
     return <AreaLogada usuario={usuario} titulo={titulo} onPerfil={abrirPerfil} onSair={() => void handleLogout()} onAprovacoes={() => { if (confirmarSaidaDaTriagem()) navigate('/users-approve') }} onHemocentros={abrirHemocentros} onAgenda={() => { if (confirmarSaidaDaTriagem()) navigate('/agenda') }}>{content}</AreaLogada>
   }

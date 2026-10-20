@@ -53,6 +53,7 @@ export function TwoFactor({ challenge, onSucesso, onVoltar }: TwoFactorProps) {
         challenge_secret: challenge.challenge_secret,
         code,
       })
+      // Nunca restaura acesso na interface se a resposta chegar apos sair da tela ou expirar.
       if (!activeRef.current || Date.now() >= challenge.expiresAt) return
       if (!response.authenticated) {
         // Qualquer resposta de autenticação falsa significa que o código não foi aceito.
@@ -64,6 +65,7 @@ export function TwoFactor({ challenge, onSucesso, onVoltar }: TwoFactorProps) {
       onSucesso(response.usuario)
     } catch (error) {
       if (!activeRef.current) return
+      // Contagem apenas de UX; limite real, expiracao e consumo pertencem ao backend.
       if (error instanceof ApiError && error.status === 401) {
         attemptsRef.current += 1
         if (attemptsRef.current >= 5) {

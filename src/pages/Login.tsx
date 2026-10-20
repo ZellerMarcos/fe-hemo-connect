@@ -42,7 +42,9 @@ export function Login({ onTwoFactor, onIrParaCadastro, onEsqueciSenha, mensagemS
     try {
       // O backend responde com 2FA quando a credencial é válida, antes de concluir a sessão.
       const response = await entrar({ email, senha })
+      // Uma resposta tardia nao pode recriar o desafio depois de sair ou cancelar o login.
       if (!activeRef.current) return
+      // Tipos TypeScript nao validam JSON em runtime; rejeita contrato antigo ou incompleto.
       if (
         !response.requires_2fa || !/^[0-9a-f]{32}$/.test(response.challenge_id) ||
         !/^[A-Za-z0-9_-]{43}$/.test(response.challenge_secret) ||
@@ -71,7 +73,7 @@ export function Login({ onTwoFactor, onIrParaCadastro, onEsqueciSenha, mensagemS
         <p className="mt-3 text-sm leading-relaxed text-zinc-600 md:text-base">Entre para acompanhar suas doações.</p>
       </div>
       {mensagemSessaoExpirada && (
-        // A mensagem de expiração é exibida somente quando o backend rejeitou a sessão por timeout.
+        // O App informa tanto expiracao da sessao quanto reinicio necessario do desafio.
         <p className="mt-4 rounded-xl bg-red-100 px-3 py-2 text-sm text-red-800" role="alert">{mensagemSessaoExpirada}</p>
       )}
       <form onSubmit={handleSubmit} noValidate className="mt-6 grid gap-4">
