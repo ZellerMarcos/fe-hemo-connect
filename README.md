@@ -95,7 +95,7 @@ Essa validacao e aplicada no cliente HTTP centralizado.
 
 ## Funcionalidades atuais
 
-- autenticacao com login, 2FA e recuperacao de senha;
+- autenticacao com login, 2FA, recuperacao de senha e troca confirmada de e-mail;
 - cadastro com consentimento explicito para tratamento de dados;
 - cadastro como doador ou solicitacao de enfermagem com COREN/UF e conta
   inativa ate conferencia e aprovacao administrativa;
@@ -122,6 +122,7 @@ Essa validacao e aplicada no cliente HTTP centralizado.
 | `/hemocentros/:id/horarios` | Autenticado: consultar disponibilidade da unidade. |
 | `/forgot-password` | Solicitacao de link para redefinir senha. |
 | `/reset-password` | Definicao de nova senha com token. |
+| `/confirm-email` | Confirmacao do novo e-mail por token expiravel e de uso unico. |
 | `/two-factor` | Confirmacao do segundo fator de autenticacao. |
 | `/home` | Painel inicial da area logada. |
 | `/perfil` | Dados da conta e direitos do titular (LGPD). |
@@ -249,6 +250,10 @@ O perfil real e o token de sessao sao retornados pelo backend apos o 2FA.
 O cliente guarda o token em `sessionStorage`, envia `Authorization: Bearer`
 e valida a identidade em `/auth/me` ao recarregar. `X-User-Email` nao autentica.
 As rotas e os dados sao autorizados pelo backend por perfil, hemocentro e autoria.
+No perfil, a troca de e-mail exige a senha atual. O frontend informa que a
+alteracao esta pendente e mantem o endereco anterior ate o link enviado ao
+novo endereco ser confirmado. A confirmacao limpa a sessao local porque o
+backend revoga todas as sessoes da conta.
 
 Publique este frontend junto do backend atualizado e aplique as migrations
 documentadas em `docs/VISAO_ENFERMEIRO.md` no repositorio `be-hemo-connect`.

@@ -56,3 +56,17 @@ export interface PasswordResetSubmitRequest {
 export interface PasswordResetSubmitResponse {
   reset: boolean
 }
+
+export interface EmailChangeRequest {
+  new_email: string
+  current_password: string
+}
+
+export interface EmailChangeRequestResponse {
+  pending_email: string
+}
+
+export interface EmailChangeConfirmResponse {
+  changed: boolean
+  email: string
+}

@@ -10,6 +10,7 @@ import { ForgotPassword } from './pages/ForgotPassword'
 import { Login } from './pages/Login'
 import { MeuPerfil } from './pages/MeuPerfil'
 import { ResetPassword } from './pages/ResetPassword'
+import { ConfirmEmailChange } from './pages/ConfirmEmailChange'
 import { TwoFactor } from './pages/TwoFactor'
 import type { LoginUserResponse } from './types/auth'
 import { AreaLogada } from './components/layout/AreaLogada'
@@ -229,6 +230,7 @@ function App() {
       <Route path="/forgot-password" element={<AuthFrame><ForgotPassword onVoltarAoLogin={() => navigate('/login')} /></AuthFrame>} />
       <Route path="/auth/forgot-password" element={<AuthFrame><ForgotPassword onVoltarAoLogin={() => navigate('/login')} /></AuthFrame>} />
       <Route path="/reset-password" element={<AuthFrame><ResetPassword token={new URLSearchParams(location.search).get('token') ?? ''} onVoltarAoLogin={() => navigate('/login')} /></AuthFrame>} />
+      <Route path="/confirm-email" element={<AuthFrame><ConfirmEmailChange token={new URLSearchParams(location.search).get('token') ?? ''} onVoltarAoLogin={() => navigate('/login')} /></AuthFrame>} />
       <Route path="/cadastro" element={<AuthFrame><Cadastro onCadastroSucesso={() => navigate('/login')} onIrParaLogin={() => navigate('/login')} /></AuthFrame>} />
       <Route path="/two-factor" element={twoFactorEmail ? <AuthFrame><TwoFactor email={twoFactorEmail} onSucesso={handleLoginSucesso} onVoltar={() => { setTwoFactorEmail(''); navigate('/login') }} /></AuthFrame> : <Navigate to="/login" replace />} />
       <Route path="/index.html" element={<ResetPasswordEntry />} />
