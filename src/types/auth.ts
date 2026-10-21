@@ -14,16 +14,26 @@ export interface LoginUserResponse {
   hemocentro_id: number | null
 }
 
-// O backend indica que a autenticação precisa de uma segunda etapa de confirmação em 2FA.
+// Senha aceita, mas ainda sem sessao: estes dados so podem existir em memoria durante o 2FA.
 export interface LoginTwoFactorResponse {
   requires_2fa: true
+  challenge_id: string
+  challenge_secret: string
+  // Duracao em segundos; nao confundir com expiresAt, que usa milissegundos.
+  expires_in: number
 }
 
-export type LoginResponse = LoginUserResponse | LoginTwoFactorResponse
+export type LoginResponse = LoginTwoFactorResponse
+
+export interface PendingTwoFactor extends LoginTwoFactorResponse {
+  // Prazo local de UX; o backend continua sendo a autoridade sobre a expiracao.
+  expiresAt: number
+}
 
 // O código de verificação é enviado para o backend para confirmar a segunda etapa da autenticação.
 export interface TwoFactorVerifyRequest {
-  email: string
+  challenge_id: string
+  challenge_secret: string
   code: string
 }
 
@@ -55,4 +65,18 @@ export interface PasswordResetSubmitRequest {
 // A confirmação final indica que a senha foi atualizada com sucesso.
 export interface PasswordResetSubmitResponse {
   reset: boolean
+}
+
+export interface EmailChangeRequest {
+  new_email: string
+  current_password: string
+}
+
+export interface EmailChangeRequestResponse {
+  pending_email: string
+}
+
+export interface EmailChangeConfirmResponse {
+  changed: boolean
+  email: string
 }

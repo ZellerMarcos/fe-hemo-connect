@@ -7,6 +7,9 @@ import type {
   PasswordResetResponse,
   PasswordResetSubmitRequest,
   PasswordResetSubmitResponse,
+  EmailChangeRequest,
+  EmailChangeRequestResponse,
+  EmailChangeConfirmResponse,
   TwoFactorVerifyRequest,
   TwoFactorVerifyResponse,
 } from '../types/auth'
@@ -51,4 +54,18 @@ export function consultarSessao() {
 
 export function sair() {
   return request<{ logged_out: boolean }>('/auth/logout', { method: 'POST' })
+}
+
+export function solicitarTrocaEmail(data: EmailChangeRequest) {
+  return request<EmailChangeRequestResponse>('/auth/email-change/request', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
+}
+
+export function confirmarTrocaEmail(token: string) {
+  return request<EmailChangeConfirmResponse>('/auth/email-change/confirm', {
+    method: 'POST',
+    body: JSON.stringify({ token }),
+  })
 }

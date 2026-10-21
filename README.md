@@ -95,7 +95,7 @@ Essa validacao e aplicada no cliente HTTP centralizado.
 
 ## Funcionalidades atuais
 
-- autenticacao com login, 2FA e recuperacao de senha;
+- autenticacao com login, 2FA, recuperacao de senha e troca confirmada de e-mail;
 - cadastro com consentimento explicito para tratamento de dados;
 - cadastro como doador ou solicitacao de enfermagem com COREN/UF e conta
   inativa ate conferencia e aprovacao administrativa;
@@ -122,6 +122,7 @@ Essa validacao e aplicada no cliente HTTP centralizado.
 | `/hemocentros/:id/horarios` | Autenticado: consultar disponibilidade da unidade. |
 | `/forgot-password` | Solicitacao de link para redefinir senha. |
 | `/reset-password` | Definicao de nova senha com token. |
+| `/confirm-email` | Confirmacao do novo e-mail por token expiravel e de uso unico. |
 | `/two-factor` | Confirmacao do segundo fator de autenticacao. |
 | `/home` | Painel inicial da area logada. |
 | `/perfil` | Dados da conta e direitos do titular (LGPD). |
@@ -157,6 +158,27 @@ O editor avisa sobre alteracoes nao salvas ao sair pelo menu ou fechar/recarrega
 a pagina; o seletor de horarios oferece estados de carregamento, vazio e erro.
 
 ## Seguranca
+
+### Segundo fator sem chave global
+
+Depois da senha valida, o backend retorna `requires_2fa`, `challenge_id`,
+`challenge_secret` e `expires_in=300`, sem sessao autenticada. O codigo de
+seis digitos chega somente por e-mail. A verificacao envia identificador,
+segredo e codigo ao backend por HTTPS; so entao recebe a sessao.
+
+O desafio fica exclusivamente no estado React, nunca em URL, cookies,
+`localStorage` ou `sessionStorage`. Ele e apagado no sucesso, cancelamento,
+saida da tela e expiracao. Recarregar exige reiniciar o login. Respostas de
+login recebidas depois de sair da tela nao recriam o desafio.
+Cinco codigos incorretos com segredo valido invalidam o desafio; erros de
+limite (`429`) informam a espera indicada pelo backend.
+Nao registrar segredo, senha ou codigo em logs ou ferramentas de analise.
+
+Essa revisao substitui o contrato antigo de verificacao por e-mail/codigo.
+Publicar junto ao backend compativel e somente depois da migration 006 e da
+homologacao do proxy/HTTPS. Nenhuma nova variavel de ambiente e necessaria.
+O token de sessao autenticada continua em `sessionStorage`, separado do
+desafio temporario; a politica de sessao P0 nao foi substituida por refresh.
 
 ### Hemocentros para o doador
 
@@ -249,6 +271,10 @@ O perfil real e o token de sessao sao retornados pelo backend apos o 2FA.
 O cliente guarda o token em `sessionStorage`, envia `Authorization: Bearer`
 e valida a identidade em `/auth/me` ao recarregar. `X-User-Email` nao autentica.
 As rotas e os dados sao autorizados pelo backend por perfil, hemocentro e autoria.
+No perfil, a troca de e-mail exige a senha atual. O frontend informa que a
+alteracao esta pendente e mantem o endereco anterior ate o link enviado ao
+novo endereco ser confirmado. A confirmacao limpa a sessao local porque o
+backend revoga todas as sessoes da conta.
 
 Publique este frontend junto do backend atualizado e aplique as migrations
 documentadas em `docs/VISAO_ENFERMEIRO.md` no repositorio `be-hemo-connect`.

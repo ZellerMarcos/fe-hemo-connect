@@ -23,6 +23,13 @@ function resolveApiUrl(): string {
 
 const API_URL = resolveApiUrl()
 
+export class ApiError extends Error {
+  constructor(message: string, public readonly status: number) {
+    super(message)
+    this.name = 'ApiError'
+  }
+}
+
 const VALIDATION_FIELD_LABELS: Record<string, string> = {
   fuso_horario: 'Fuso horário',
   duracao_minutos: 'Duração do horário',
@@ -94,20 +101,27 @@ export async function request<T>(path: string, options: RequestInit = {}): Promi
     let message = 'Não foi possível concluir a operação.'
     try {
       const body: { detail?: unknown } = await response.json()
+      // Erros internos nao devem expor detalhes de infraestrutura retornados pela API.
       if (response.status < 500 && typeof body.detail === 'string') message = body.detail
       if (response.status === 422) {
         message = formatValidationErrors(body.detail)
           ?? 'A API rejeitou os dados. Confira os campos informados e tente novamente.'
       }
-      // Qualquer 401 em rotas protegidas sinaliza sessão inválida ou expirada; o app reage redirecionando para o login.
     } catch (error) {
       if (!(error instanceof SyntaxError)) throw error
     }
+    // Credenciais/2FA invalidos nao expiram uma sessao existente; outros 401 notificam o App.
     if (response.status === 401 && !path.includes('/auth/login') && !path.includes('/auth/2fa')) {
       clearAccessToken()
       window.dispatchEvent(new CustomEvent('session-expired'))
     }
-    throw new Error(message)
+    if (response.status === 429) {
+      const retryAfter = response.headers.get('Retry-After')
+      if (retryAfter && /^\d+$/.test(retryAfter)) {
+        message += ` Tente novamente em ${retryAfter} segundos.`
+      }
+    }
+    throw new ApiError(message, response.status)
   }
 
   if (response.status === 204) return undefined as T
