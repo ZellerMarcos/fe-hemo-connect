@@ -1,0 +1,140 @@
+name: DevSecOps avancado Frontend
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: advanced-frontend-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  ZAP_IMAGE: ghcr.io/zaproxy/zaproxy@sha256:0075662e5c287cf0a68caebabbfea872e5dc461912ad6d7345fa02a290d0ccb6
+
+jobs:
+  zap:
+    name: ZAP DAST Frontend
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: "22"
+          cache: npm
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.12"
+      - name: Test fail-closed gates
+        run: python -m unittest discover -s scripts/security_tests -v
+      - name: Install and build isolated frontend
+        env:
+          VITE_API_URL: https://localhost:8000
+        run: |
+          npm ci
+          npm run build
+      - name: Serve and scan local SPA
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p security-results/zap
+          npm run preview -- --host 127.0.0.1 --port 4173 --strictPort > "$RUNNER_TEMP/frontend-preview.log" 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid"' EXIT
+          ready=0
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:4173/login > /dev/null; then ready=1; break; fi
+            if ! kill -0 "$server_pid" 2>/dev/null; then echo "Preview failed to start" >&2; exit 1; fi
+            sleep 1
+          done
+          test "$ready" = 1
+          set +e
+          docker run --rm --network host --user "$(id -u):$(id -g)" -e HOME=/tmp \
+            -v "$PWD/scripts/zap-frontend.yaml:/zap/plan.yaml:ro" \
+            -v "$PWD/security-results/zap:/zap/reports:rw" \
+            "$ZAP_IMAGE" zap.sh -dir /tmp/zap-ci -cmd -autorun /zap/plan.yaml
+          status=$?
+          set -e
+          python scripts/security_gate.py zap security-results/zap/zap-frontend.json --scanner-exit "$status"
+      - name: Upload ZAP reports
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: zap-frontend
+          path: security-results/zap/
+          if-no-files-found: error
+          retention-days: 14
+
+  bearer:
+    name: Bearer Privacy Frontend
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Install verified Bearer CLI
+        run: bash scripts/install_security_tool.sh bearer "$RUNNER_TEMP/security-bin"
+      - name: Scan source - Critical blocks
+        run: |
+          mkdir -p security-results/bearer
+          "$RUNNER_TEMP/security-bin/bearer" scan src \
+            --disable-default-rules --external-rule-dir "$RUNNER_TEMP/security-bin/bearer-rules/rules" \
+            --disable-version-check --no-extract --ignore-file .security/bearer.ignore \
+            --format json --output security-results/bearer/bearer.json \
+            --fail-on-severity critical --exit-code 1
+      - name: Generate data privacy inventory
+        if: always()
+        run: |
+          mkdir -p security-results/bearer
+          "$RUNNER_TEMP/security-bin/bearer" scan src \
+            --disable-default-rules --external-rule-dir "$RUNNER_TEMP/security-bin/bearer-rules/rules" \
+            --disable-version-check --no-extract --report privacy \
+            --format json --output security-results/bearer/privacy.json
+      - name: Verify report exists
+        if: always()
+        run: python -c "import json; from pathlib import Path; [json.loads(Path('security-results/bearer', name).read_text()) for name in ('bearer.json', 'privacy.json')]"
+      - name: Upload privacy report
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: bearer-frontend
+          path: security-results/bearer/
+          if-no-files-found: error
+          retention-days: 14
+
+  sbom:
+    name: Trivy SBOM Frontend
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: "22"
+          cache: npm
+      - name: Validate lockfile
+        run: npm ci
+      - name: Install verified Trivy
+        run: bash scripts/install_security_tool.sh trivy "$RUNNER_TEMP/security-bin"
+      - name: Generate and validate complete CycloneDX SBOM
+        run: |
+          mkdir -p security-results/sbom
+          "$RUNNER_TEMP/security-bin/trivy" fs --format cyclonedx --include-dev-deps \
+            --skip-dirs node_modules,dist,.git,security-results \
+            --output security-results/sbom/sbom.json .
+          python scripts/security_gate.py sbom security-results/sbom/sbom.json --expect react vite typescript
+          printf '{"commit":"%s","tool":"Trivy 0.76.1","scope":"npm lockfile including development dependencies"}\n' \
+            "$GITHUB_SHA" > security-results/sbom/metadata.json
+      - name: Upload downloadable SBOM
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: sbom-frontend
+          path: security-results/sbom/
+          if-no-files-found: error
+          retention-days: 14

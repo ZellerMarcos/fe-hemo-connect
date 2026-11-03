@@ -18,3 +18,5 @@ npm-debug.log*
 !.vscode/extensions.json
 .DS_Store
 Thumbs.db
+security-results/
+__pycache__/

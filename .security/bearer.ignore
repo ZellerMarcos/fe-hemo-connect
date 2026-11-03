@@ -1,0 +1,14 @@
+{
+  "c48985ef6e419bead72b63c9ba1a2a39_0": {
+    "author": "Hemo Connect",
+    "comment": "Public route constant in src/routes.ts (forgot/reset password URL), not a credential. Reviewed 2026-11-02; re-review by 2026-12-02. Only this fingerprint is excluded; the hardcoded-secret rule remains enabled.",
+    "false_positive": true,
+    "ignored_at": "2026-11-03T02:18:12Z"
+  },
+  "c48985ef6e419bead72b63c9ba1a2a39_1": {
+    "author": "Hemo Connect",
+    "comment": "Public route constant in src/routes.ts (forgot/reset password URL), not a credential. Reviewed 2026-11-02; re-review by 2026-12-02. Only this fingerprint is excluded; the hardcoded-secret rule remains enabled.",
+    "false_positive": true,
+    "ignored_at": "2026-11-03T02:18:15Z"
+  }
+}

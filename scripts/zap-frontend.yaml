@@ -1,0 +1,49 @@
+env:
+  contexts:
+    - name: frontend
+      urls:
+        - http://127.0.0.1:4173
+      includePaths:
+        - 'http://127\.0\.0\.1:4173/.*'
+  parameters:
+    failOnError: true
+    failOnWarning: true
+    progressToStdout: false
+jobs:
+  - type: requestor
+    requests:
+      - url: http://127.0.0.1:4173/
+        responseCode: 200
+      - url: http://127.0.0.1:4173/login
+        responseCode: 200
+      - url: http://127.0.0.1:4173/cadastro
+        responseCode: 200
+  - type: spider
+    parameters:
+      context: frontend
+      maxDuration: 1
+  - type: spiderAjax
+    parameters:
+      context: frontend
+      browserId: firefox-headless
+      maxDuration: 2
+  - type: passiveScan-wait
+    parameters:
+      maxDuration: 2
+  - type: report
+    parameters:
+      template: traditional-json
+      reportDir: /zap/reports
+      reportFile: zap-frontend.json
+      reportTitle: Hemo Connect frontend passive DAST
+  - type: report
+    parameters:
+      template: traditional-html
+      reportDir: /zap/reports
+      reportFile: zap-frontend.html
+  - type: exitStatus
+    parameters:
+      errorLevel: High
+      okExitValue: 0
+      errorExitValue: 1
+      warnExitValue: 1
