@@ -34,6 +34,7 @@ na guia do navegador do que a assinatura horizontal.
 ## Sumario
 
 - [Descrição](#descrição)
+- [DevSecOps avancado](#devsecops-avancado)
 - [Tecnologias](#tecnologias)
 - [Instalação](#instalação)
 - [Execução](#execução)
@@ -44,6 +45,41 @@ na guia do navegador do que a assinatura horizontal.
 - [Rotas principais](#rotas-principais)
 - [Seguranca](#seguranca)
 - [Documentacao complementar](#documentacao-complementar)
+
+## DevSecOps avancado
+
+O [workflow avancado](.github/workflows/devsecops-avancado.yml) executa
+ZAP DAST passivo da SPA local, Bearer para seguranca/privacidade e Trivy
+para gerar SBOM CycloneDX com dependencias de desenvolvimento.
+ZAP High e Bearer Critical bloqueiam seus checks; falhas de execucao ou
+relatorio nao sao convertidas em sucesso. O Trivy SCA da esteira existente
+continua separado, bloqueando vulnerabilidades HIGH/CRITICAL.
+
+Os tres jobs foram aprovados no GitHub Actions. O scan da SPA nao comprova
+jornadas autenticadas completas nem substitui o DAST da API.
+Bearer utiliza ELv2 (source-available); a ressalva ao requisito literal
+"100% open-source" permanece documentada.
+
+- [Relatorio consolidado de ambos os repositorios](docs/RELATORIO_DEVSECOPS_AVANCADO.md).
+- [PDF com os quatro prints do GitHub Actions](docs/Relatorio_DevSecOps_Avancado_Hemo_Connect.pdf).
+- [Imagens utilizadas no relatorio](docs/evidencias/devsecops-avancado).
+- [Evidencias tecnicas centralizadas no backend](https://github.com/ZellerMarcos/be-hemo-connect/tree/main/docs/evidencias/devsecops-avancado).
+- [Execucao do frontend](https://github.com/ZellerMarcos/fe-hemo-connect/actions/runs/41639828429).
+
+Na pagina da execucao, abra Summary e a secao Artifacts para baixar
+sbom-frontend, bearer-frontend e zap-frontend. A retencao e de 14 dias.
+Os snapshots preservados no backend sao historicos, nao inventarios
+garantidamente atuais. Checks obrigatorios na protecao de branch ainda
+precisam de verificacao; uma execucao verde nao comprova essa configuracao.
+
+Este repositorio recebe somente o relatorio, PDF e as seis imagens
+referenciadas, preservando a estrutura relativa das imagens.
+O gerador do PDF permanece no backend; ao atualizar esta entrega,
+mantenha o PDF consistente com o relatorio e suas imagens. ZIPs, JSONs,
+logs, inventarios e relatorios de scanners permanecem centralizados no backend.
+Nenhum script ou dependencia da API e necessario para consultar esta
+documentacao. Os workflows existentes permanecem independentes e nao
+precisam de alteracao para disponibilizar esse pacote documental.
 
 ## Tecnologias
 
