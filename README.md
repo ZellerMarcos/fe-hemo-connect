@@ -67,6 +67,11 @@ npm run preview
 
 ## Instalação
 
+O Vite requer versao 7.3.7 ou superior na linha 7.x para corrigir a
+[CVE-2026-112942](https://www.cve.org/CVERecord?id=CVE-2026-112942).
+Versione o `package-lock.json` junto com atualizacoes de dependencias.
+Em CI, utilize `npm ci` para instalar as versoes registradas no lockfile.
+
 ```bash
 npm install
 ```
