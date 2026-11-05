@@ -114,14 +114,30 @@ A tela de checks dos PRs nao foi incluida porque, apos o merge, o GitHub deixa d
 | Semgrep INFO ou WARNING | Nao bloqueia. | Configurado. |
 | Semgrep ERROR | Bloqueia com `--error`. | Configurado; nenhum achado ERROR nas execucoes aprovadas. |
 
-**Protecao da branch main - lacuna aberta:** em consulta de 05/11/2026, a API publica indicou `main` sem protecao de branch e sem regras de ruleset nos dois repositorios. Isso significa que um check vermelho **nao impede o merge** hoje: a esteira sinaliza a falha, mas o GitHub ainda nao a exige. Para cumprir a diretriz de impedir o merge, e necessario criar um Ruleset (ou Branch Protection) em `main` que exija Pull Request e os checks `Secrets - TruffleHog`, `Dependencies - Trivy`, `SAST - Semgrep` e os de validacao. A consulta foi feita sem autenticacao, entao uma configuracao nao visivel publicamente deve ser confirmada pelo responsavel.
+**Protecao da branch main (Ruleset ativo):** em 05/11/2026, antes da configuracao, a API publica indicava `main` sem protecao nos dois repositorios. Em seguida foi criado, em cada repositorio, o Ruleset `proteger-main` (status Active, alvo: branch padrao `main`). A consulta publica `GET /repos/ZellerMarcos/{repositorio}/rules/branches/main` confirma as regras ativas:
+
+| Regra | Efeito |
+| --- | --- |
+| Restrict deletions | Impede apagar a `main`. |
+| Block force pushes | Impede reescrever o historico da `main`. |
+| Require a pull request before merging | Alteracoes entram por Pull Request (0 aprovacoes exigidas). |
+| Require status checks to pass | Exige `Secrets - TruffleHog`, `Dependencies - Trivy`, `SAST - Semgrep` e `Backend validation` (backend) ou `Frontend validation` (frontend), com a branch atualizada antes do merge (`strict`). |
+
+Assim, um job vermelho (Trivy HIGH/CRITICAL, Semgrep ERROR ou segredo verificado) deixa de ser apenas um aviso e passa a impedir o merge na `main`.
+
+![Backend - Ruleset proteger-main ativo (4 regras, 1 branch alvo)](evidencias/pipeline-basico/ruleset-backend-proteger-main.png)
+
+![Frontend - Ruleset proteger-main ativo (4 regras, 1 branch alvo)](evidencias/pipeline-basico/ruleset-frontend-proteger-main.png)
+
+**Limite:** o bloqueio ainda nao foi exercitado com um Pull Request de check vermelho apos a criacao do Ruleset; a evidencia atual e a configuracao ativa, confirmada pela API. Sem regra de aprovacao de revisores, o autor pode aprovar o proprio PR, e a lista de bypass deve permanecer vazia para a regra valer tambem para o dono do repositorio.
 
 ## 7. Resultados
 
 - Os quatro jobs de cada repositorio foram aprovados nas execucoes de pull request e de merge listadas na secao 5.
 - Houve um bloqueio real pelo Trivy no frontend (vite 7.3.6, HIGH), corrigido com a atualizacao para 7.3.7.
-- Pendencias para a entrega completa: ativacao da protecao de `main`, confirmacao do documento-base e publicacao da release.
+- Ruleset `proteger-main` ativo nos dois repositorios, exigindo Pull Request e os checks de seguranca e validacao.
+- Pendencias para a entrega completa: confirmacao do documento-base e publicacao da release.
 
 ## 8. Conclusao
 
-A esteira automatiza a verificacao de segredos, CVEs e padroes de codigo inseguro, alem de confirmar testes e build, reduzindo o risco de mudancas inseguras chegarem a `main`. Ela nao torna o sistema automaticamente seguro: revisao de codigo, rotacao de segredos, correcao de achados e, principalmente, a protecao de branch que torne os checks obrigatorios continuam necessarias.
+A esteira automatiza a verificacao de segredos, CVEs e padroes de codigo inseguro, alem de confirmar testes e build, reduzindo o risco de mudancas inseguras chegarem a `main`. Ela nao torna o sistema automaticamente seguro: revisao de codigo, rotacao de segredos, correcao de achados e, e a manutencao da protecao de branch que torna os checks obrigatorios continuam necessarias.
