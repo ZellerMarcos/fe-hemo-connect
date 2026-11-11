@@ -60,8 +60,8 @@ jornadas autenticadas completas nem substitui o DAST da API.
 Bearer utiliza ELv2 (source-available); a ressalva ao requisito literal
 "100% open-source" permanece documentada.
 
-- [Relatorio consolidado de ambos os repositorios](docs/RELATORIO_DEVSECOPS_AVANCADO.md).
-- [PDF com os quatro prints do GitHub Actions](docs/Relatorio_DevSecOps_Avancado_Hemo_Connect.pdf).
+- [Relatorio tecnico DevSecOps consolidado](docs/RELATORIO_TECNICO_DEVSECOPS.md).
+- [PDF do relatorio tecnico, com os prints do GitHub Actions](docs/Relatorio_Tecnico_DevSecOps_Hemo_Connect.pdf).
 - [Imagens utilizadas no relatorio](docs/evidencias/devsecops-avancado).
 - [Evidencias tecnicas centralizadas no backend](https://github.com/ZellerMarcos/be-hemo-connect/tree/main/docs/evidencias/devsecops-avancado).
 - [Execucao do frontend](https://github.com/ZellerMarcos/fe-hemo-connect/actions/runs/41639828429).
