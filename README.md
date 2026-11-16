@@ -314,7 +314,7 @@ e valida a identidade em `/auth/me` ao recarregar. `X-User-Email` nao autentica.
 As rotas e os dados sao autorizados pelo backend por perfil, hemocentro e autoria.
 No perfil, a troca de e-mail exige a senha atual. O frontend informa que a
 alteracao esta pendente e mantem o endereco anterior ate o link enviado ao
-novo endereco ser confirmado. O link abre `/confirm-email?token=...`, sem
+novo endereco ser confirmado. O link abre `/confirm-email?email_change_token=...`, sem
 confirmar automaticamente nem exibir campos de senha. A tela apresenta os
 avisos de seguranca e exige o clique em **Confirmo a solicitacao de troca de
 e-mail**. Voltar ao login sem confirmar nao altera o endereco.
@@ -327,7 +327,14 @@ sem redirecionar o navegador para `/index.html` ou `/reset-password`, preservand
 o caminho e a query string. `FRONTEND_URL` no backend deve conter somente a
 origem do frontend (por exemplo, `https://seu-frontend.onrender.com`), sem rotas,
 query string ou fragmento. Publique ambos os repositorios e solicite um novo
-e-mail para validar o fluxo publicado; `/reset-password` e exclusivo de senha.
+e-mail para validar o fluxo publicado; `/reset-password?token=...` e exclusivo
+de senha. O parametro `email_change_token` identifica apenas o aceite de troca
+de e-mail: mesmo se o link chegar por `/index.html`, `/reset-password` ou outra
+rota com essa query string preservada, o frontend abre `/confirm-email` e
+aguarda o aceite explicito. Links antigos `/confirm-email?token=...` continuam
+compativeis; um `token` generico recebido em `/index.html` continua reservado
+a recuperacao de senha. Para receber o identificador exclusivo, solicite um
+novo link depois de publicar os dois repositorios.
 
 Publique este frontend junto do backend atualizado e aplique as migrations
 documentadas em `docs/VISAO_ENFERMEIRO.md` no repositorio `be-hemo-connect`.
