@@ -173,7 +173,7 @@ function App() {
 
   useEffect(() => {
     const handleSessionExpired = () => {
-      if (location.pathname === '/reset-password' || location.pathname === '/forgot-password') return
+      if (location.pathname === '/reset-password' || location.pathname === '/forgot-password' || location.pathname === '/confirm-email') return
       setUsuario(null)
       clearAccessToken()
       setTwoFactorChallenge(null)
@@ -242,6 +242,14 @@ function App() {
     navigate('/login', { replace: true })
   }
 
+  function emailConfirmado() {
+    clearAccessToken()
+    setUsuario(null)
+    setTwoFactorChallenge(null)
+    setErroSessao('')
+    setMensagemSessaoExpirada('')
+  }
+
   function area(titulo: string, content: React.ReactNode) {
     // Esta guarda cuida da navegacao; perfil, unidade e autoria sao autorizados pela API.
     if (!usuario) return <Navigate to="/login" replace />
@@ -262,7 +270,7 @@ function App() {
       <Route path="/forgot-password" element={<AuthFrame><ForgotPassword onVoltarAoLogin={() => navigate('/login')} /></AuthFrame>} />
       <Route path="/auth/forgot-password" element={<AuthFrame><ForgotPassword onVoltarAoLogin={() => navigate('/login')} /></AuthFrame>} />
       <Route path="/reset-password" element={<AuthFrame><ResetPassword token={new URLSearchParams(location.search).get('token') ?? ''} onVoltarAoLogin={() => navigate('/login')} /></AuthFrame>} />
-      <Route path="/confirm-email" element={<AuthFrame><ConfirmEmailChange token={new URLSearchParams(location.search).get('token') ?? ''} onVoltarAoLogin={() => navigate('/login')} /></AuthFrame>} />
+      <Route path="/confirm-email" element={<AuthFrame><ConfirmEmailChange key={location.search} token={new URLSearchParams(location.search).get('token') ?? ''} onConfirmado={emailConfirmado} onVoltarAoLogin={() => navigate('/login')} /></AuthFrame>} />
       <Route path="/cadastro" element={<AuthFrame><Cadastro onCadastroSucesso={() => navigate('/login')} onIrParaLogin={() => navigate('/login')} /></AuthFrame>} />
       <Route path="/two-factor" element={usuario ? <Navigate to="/home" replace /> : twoFactorChallenge ? <AuthFrame><TwoFactor challenge={twoFactorChallenge} onSucesso={handleLoginSucesso} onVoltar={() => { setTwoFactorChallenge(null); setMensagemSessaoExpirada('Inicie o login novamente para receber outro código.'); navigate('/login') }} /></AuthFrame> : <Navigate to="/login" replace />} />
       <Route path="/index.html" element={<ResetPasswordEntry />} />

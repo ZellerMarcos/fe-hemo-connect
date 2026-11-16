@@ -163,7 +163,7 @@ Essa validacao e aplicada no cliente HTTP centralizado.
 | `/hemocentros/:id/horarios` | Autenticado: consultar disponibilidade da unidade. |
 | `/forgot-password` | Solicitacao de link para redefinir senha. |
 | `/reset-password` | Definicao de nova senha com token. |
-| `/confirm-email` | Confirmacao do novo e-mail por token expiravel e de uso unico. |
+| `/confirm-email` | Tela dedicada a confirmacao explicita da troca de e-mail por token expiravel e de uso unico. |
 | `/two-factor` | Confirmacao do segundo fator de autenticacao. |
 | `/home` | Painel inicial da area logada. |
 | `/perfil` | Dados da conta e direitos do titular (LGPD). |
@@ -314,8 +314,20 @@ e valida a identidade em `/auth/me` ao recarregar. `X-User-Email` nao autentica.
 As rotas e os dados sao autorizados pelo backend por perfil, hemocentro e autoria.
 No perfil, a troca de e-mail exige a senha atual. O frontend informa que a
 alteracao esta pendente e mantem o endereco anterior ate o link enviado ao
-novo endereco ser confirmado. A confirmacao limpa a sessao local porque o
-backend revoga todas as sessoes da conta.
+novo endereco ser confirmado. O link abre `/confirm-email?token=...`, sem
+confirmar automaticamente nem exibir campos de senha. A tela apresenta os
+avisos de seguranca e exige o clique em **Confirmo a solicitacao de troca de
+e-mail**. Voltar ao login sem confirmar nao altera o endereco.
+O link vale por 15 minutos e tem uso unico; uma nova solicitacao invalida o
+anterior. A confirmacao limpa a sessao local porque o backend revoga todas as
+sessoes da conta; o proximo login usa o novo e-mail e a mesma senha.
+
+No deploy, mantenha o rewrite SPA de `render.yaml` para servir `/confirm-email`
+sem redirecionar o navegador para `/index.html` ou `/reset-password`, preservando
+o caminho e a query string. `FRONTEND_URL` no backend deve conter somente a
+origem do frontend (por exemplo, `https://seu-frontend.onrender.com`), sem rotas,
+query string ou fragmento. Publique ambos os repositorios e solicite um novo
+e-mail para validar o fluxo publicado; `/reset-password` e exclusivo de senha.
 
 Publique este frontend junto do backend atualizado e aplique as migrations
 documentadas em `docs/VISAO_ENFERMEIRO.md` no repositorio `be-hemo-connect`.
