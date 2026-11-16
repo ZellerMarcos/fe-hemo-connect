@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
+    "test:email-change": "node --test scripts/test-email-change.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

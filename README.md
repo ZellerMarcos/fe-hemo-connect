@@ -330,11 +330,27 @@ query string ou fragmento. Publique ambos os repositorios e solicite um novo
 e-mail para validar o fluxo publicado; `/reset-password?token=...` e exclusivo
 de senha. O parametro `email_change_token` identifica apenas o aceite de troca
 de e-mail: mesmo se o link chegar por `/index.html`, `/reset-password` ou outra
-rota com essa query string preservada, o frontend abre `/confirm-email` e
-aguarda o aceite explicito. Links antigos `/confirm-email?token=...` continuam
+rota com essa query string preservada, o frontend renderiza a confirmacao
+diretamente no endereco recebido, sem um redirecionamento intermediario.
+Essa entrada publica fica fora da restauracao de sessao: abrir o link nao
+consulta `/auth/me`, nao exige login e nao aguarda o backend. A API so e
+chamada ao clicar no aceite, em `/auth/email-change/confirm`.
+Falhas de configuracao da URL da API sao validadas na chamada e exibidas
+como erro da operacao, sem impedir a renderizacao inicial da pagina. As
+restricoes de HTTPS em producao continuam obrigatorias.
+Voltar sem confirmar preserva a sessao existente; concluir limpa a sessao
+local e o backend revoga as sessoes da conta.
+Links antigos `/confirm-email?token=...` continuam
 compativeis; um `token` generico recebido em `/index.html` continua reservado
 a recuperacao de senha. Para receber o identificador exclusivo, solicite um
 novo link depois de publicar os dois repositorios.
+
+Regressao da entrada publica (primeiro render, sem redirecionamento nem
+restauracao de sessao), usando Node e Vite ja presentes no projeto:
+
+```powershell
+npm run test:email-change
+```
 
 Publique este frontend junto do backend atualizado e aplique as migrations
 documentadas em `docs/VISAO_ENFERMEIRO.md` no repositorio `be-hemo-connect`.
