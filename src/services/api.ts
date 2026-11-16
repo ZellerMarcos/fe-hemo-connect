@@ -21,8 +21,6 @@ function resolveApiUrl(): string {
   return normalized
 }
 
-const API_URL = resolveApiUrl()
-
 export class ApiError extends Error {
   constructor(message: string, public readonly status: number) {
     super(message)
@@ -86,12 +84,13 @@ function formatValidationErrors(detail: unknown): string | null {
 
 // A função request centraliza a comunicação HTTP da aplicação, padronizando URL base, headers e tratamento de erros do backend.
 export async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const apiUrl = resolveApiUrl()
   // Centralizar o fetch mantém a URL base, os headers e o padrão de tratamento de erros em um único ponto.
   const headers = new Headers(options.headers)
   headers.set('Content-Type', 'application/json')
   const token = getAccessToken()
   if (token) headers.set('Authorization', `Bearer ${token}`)
-  const response = await fetch(`${API_URL}${path}`, {
+  const response = await fetch(`${apiUrl}${path}`, {
     ...options,
     headers,
   })
