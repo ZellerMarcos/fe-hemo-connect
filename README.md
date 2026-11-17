@@ -322,6 +322,15 @@ O link vale por 15 minutos e tem uso unico; uma nova solicitacao invalida o
 anterior. A confirmacao limpa a sessao local porque o backend revoga todas as
 sessoes da conta; o proximo login usa o novo e-mail e a mesma senha.
 
+O formulario valida os campos obrigatorios e o formato basico do novo e-mail
+antes de enviar. A API continua sendo a autoridade de validacao. A senha e
+enviada exatamente como digitada, sem remover espacos. Erros 422 estruturados
+sao associados aos campos **Novo e-mail** e **Senha atual**, com mensagens
+acessiveis; mensagens textuais de APIs anteriores tambem sao preservadas.
+Senha incorreta (403) e e-mail indisponivel (409) continuam sendo apresentados
+sem alterar o fluxo de confirmacao. Publique ambos os repositorios para
+habilitar os detalhes seguros por campo.
+
 No deploy, mantenha o rewrite SPA de `render.yaml` para servir `/confirm-email`
 sem redirecionar o navegador para `/index.html` ou `/reset-password`, preservando
 o caminho e a query string. `FRONTEND_URL` no backend deve conter somente a
@@ -345,8 +354,9 @@ compativeis; um `token` generico recebido em `/index.html` continua reservado
 a recuperacao de senha. Para receber o identificador exclusivo, solicite um
 novo link depois de publicar os dois repositorios.
 
-Regressao da entrada publica (primeiro render, sem redirecionamento nem
-restauracao de sessao), usando Node e Vite ja presentes no projeto:
+Regressoes da entrada publica (primeiro render, sem redirecionamento nem
+restauracao de sessao) e do tratamento de erros 422/403/409, usando Node e
+Vite ja presentes no projeto:
 
 ```powershell
 npm run test:email-change

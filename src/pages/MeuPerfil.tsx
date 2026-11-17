@@ -5,9 +5,12 @@ import { motion } from 'motion/react'
 import { Button } from '../components/ui/button'
 import { BrandLogo } from '../components/BrandLogo'
 import { Privacidade } from './Privacidade'
-import type { LoginUserResponse } from '../types/auth'
+import type { EmailChangeRequest, LoginUserResponse } from '../types/auth'
 import { Input } from '../components/ui/input'
 import { solicitarTrocaEmail } from '../services/auth'
+import { ApiError } from '../services/api'
+
+type EmailChangeFieldErrors = Partial<Record<keyof EmailChangeRequest, string>>
 
 interface MeuPerfilProps {
   usuario: LoginUserResponse
@@ -20,28 +23,51 @@ export function MeuPerfil({ usuario, onVoltarHome, onContaRemovida }: MeuPerfilP
   const [novoEmail, setNovoEmail] = useState('')
   const [senhaAtual, setSenhaAtual] = useState('')
   const [erroEmail, setErroEmail] = useState('')
+  const [errosCamposEmail, setErrosCamposEmail] = useState<EmailChangeFieldErrors>({})
   const [sucessoEmail, setSucessoEmail] = useState('')
   const [enviandoEmail, setEnviandoEmail] = useState(false)
 
   async function handleEmailChange(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setErroEmail('')
+    setErrosCamposEmail({})
     setSucessoEmail('')
-    if (!novoEmail.trim() || !senhaAtual) {
-      setErroEmail('Informe o novo e-mail e sua senha atual.')
+    const form = event.currentTarget
+    const emailInput = form.elements.namedItem('new_email')
+    const normalizedEmail = novoEmail.trim()
+    const fieldErrors: EmailChangeFieldErrors = {}
+    if (!normalizedEmail) {
+      fieldErrors.new_email = 'Informe o novo e-mail.'
+    } else if (emailInput instanceof HTMLInputElement && emailInput.validity.typeMismatch) {
+      fieldErrors.new_email = 'Informe um endereço de e-mail válido.'
+    }
+    if (!senhaAtual) fieldErrors.current_password = 'Informe sua senha atual.'
+    if (fieldErrors.new_email || fieldErrors.current_password) {
+      setErrosCamposEmail(fieldErrors)
+      setErroEmail('Confira os campos destacados.')
+      const input = form.elements.namedItem(fieldErrors.new_email ? 'new_email' : 'current_password')
+      if (input instanceof HTMLElement) input.focus()
       return
     }
     setEnviandoEmail(true)
     try {
       const response = await solicitarTrocaEmail({
-        new_email: novoEmail.trim(),
+        new_email: normalizedEmail,
         current_password: senhaAtual,
       })
       setSucessoEmail(`Enviamos a confirmação para ${response.pending_email}. Seu e-mail atual permanece válido até a confirmação.`)
       setNovoEmail('')
       setSenhaAtual('')
     } catch (error) {
-      setErroEmail(error instanceof Error ? error.message : 'Não foi possível solicitar a troca de e-mail.')
+      if (error instanceof ApiError && (error.fieldErrors.new_email || error.fieldErrors.current_password)) {
+        setErrosCamposEmail({
+          new_email: error.fieldErrors.new_email,
+          current_password: error.fieldErrors.current_password,
+        })
+        setErroEmail('Confira os campos destacados.')
+      } else {
+        setErroEmail(error instanceof Error ? error.message : 'Não foi possível solicitar a troca de e-mail.')
+      }
     } finally {
       setEnviandoEmail(false)
     }
@@ -91,14 +117,38 @@ export function MeuPerfil({ usuario, onVoltarHome, onContaRemovida }: MeuPerfilP
         <h2 id="troca-email-title" className="text-lg font-semibold text-zinc-900">Trocar e-mail</h2>
         <p className="mt-2 text-sm text-zinc-600">Confirme sua senha atual. A troca só será concluída pelo link enviado ao novo endereço.</p>
         <form onSubmit={handleEmailChange} className="mt-4 grid gap-4" noValidate>
-          <label className="grid gap-2 text-sm font-semibold text-zinc-700">
-            Novo e-mail
-            <Input type="email" value={novoEmail} onChange={(event) => setNovoEmail(event.target.value)} autoComplete="email" required />
-          </label>
-          <label className="grid gap-2 text-sm font-semibold text-zinc-700">
-            Senha atual
-            <Input type="password" value={senhaAtual} onChange={(event) => setSenhaAtual(event.target.value)} autoComplete="current-password" required />
-          </label>
+          <div className="grid gap-2 text-sm font-semibold text-zinc-700">
+            <label htmlFor="novo-email">Novo e-mail</label>
+            <Input
+              id="novo-email" name="new_email" type="email" value={novoEmail}
+              onChange={(event) => {
+                setNovoEmail(event.target.value)
+                setErrosCamposEmail(current => ({ ...current, new_email: undefined }))
+                setErroEmail('')
+                setSucessoEmail('')
+              }}
+              autoComplete="email" required
+              aria-invalid={Boolean(errosCamposEmail.new_email)}
+              aria-describedby={errosCamposEmail.new_email ? 'novo-email-error' : undefined}
+            />
+            {errosCamposEmail.new_email && <p id="novo-email-error" className="font-normal text-red-800" role="alert">{errosCamposEmail.new_email}</p>}
+          </div>
+          <div className="grid gap-2 text-sm font-semibold text-zinc-700">
+            <label htmlFor="senha-atual-email">Senha atual</label>
+            <Input
+              id="senha-atual-email" name="current_password" type="password" value={senhaAtual}
+              onChange={(event) => {
+                setSenhaAtual(event.target.value)
+                setErrosCamposEmail(current => ({ ...current, current_password: undefined }))
+                setErroEmail('')
+                setSucessoEmail('')
+              }}
+              autoComplete="current-password" required
+              aria-invalid={Boolean(errosCamposEmail.current_password)}
+              aria-describedby={errosCamposEmail.current_password ? 'senha-atual-email-error' : undefined}
+            />
+            {errosCamposEmail.current_password && <p id="senha-atual-email-error" className="font-normal text-red-800" role="alert">{errosCamposEmail.current_password}</p>}
+          </div>
           {erroEmail && <p className="rounded-xl bg-red-100 px-3 py-2 text-sm text-red-800" role="alert">{erroEmail}</p>}
           {sucessoEmail && <p className="rounded-xl bg-emerald-100 px-3 py-2 text-sm text-emerald-800" role="status">{sucessoEmail}</p>}
           <Button type="submit" disabled={enviandoEmail}>

@@ -10,7 +10,12 @@ let App
 
 before(async () => {
   process.env.VITE_API_URL = ''
-  server = await createServer({ server: { middlewareMode: true }, appType: 'custom' })
+  server = await createServer({
+    server: { middlewareMode: true, hmr: false },
+    appType: 'custom',
+    optimizeDeps: { noDiscovery: true, include: [] },
+    define: { 'import.meta.env.VITE_API_URL': 'process.env.VITE_API_URL' },
+  })
   App = (await server.ssrLoadModule('/src/App.tsx')).default
 })
 
@@ -50,4 +55,54 @@ test('missing or empty email tokens show an error instead of a blank page or pas
 test('API configuration errors reject confirmation instead of crashing page initialization', async () => {
   const { confirmarTrocaEmail } = await server.ssrLoadModule('/src/services/auth.ts')
   await assert.rejects(confirmarTrocaEmail('public-email-token'), /VITE_API_URL/)
+})
+
+test('API errors preserve text and expose validation fields without changing 403 or 409', async (context) => {
+  process.env.VITE_API_URL = 'https://api.example.test'
+  const storageDescriptor = Object.getOwnPropertyDescriptor(globalThis, 'sessionStorage')
+  Object.defineProperty(globalThis, 'sessionStorage', {
+    configurable: true,
+    value: { getItem: () => null },
+  })
+  try {
+    const { request, ApiError } = await server.ssrLoadModule('/src/services/api.ts')
+    const cases = [
+      { status: 422, detail: 'Confira os campos informados.', message: 'Confira os campos informados.', fields: {} },
+      {
+        status: 422,
+        detail: [
+          { loc: ['body', 'new_email'], type: 'value_error', msg: 'Informe um endereço de e-mail válido.' },
+          { loc: ['body', 'current_password'], type: 'missing', msg: 'Informe sua senha atual.' },
+        ],
+        message: 'Novo e-mail: Informe um endereço de e-mail válido.\nSenha atual: Informe sua senha atual.',
+        fields: { new_email: 'Informe um endereço de e-mail válido.', current_password: 'Informe sua senha atual.' },
+      },
+      {
+        status: 422, detail: null,
+        message: 'A API rejeitou os dados. Confira os campos informados e tente novamente.', fields: {},
+      },
+      { status: 403, detail: 'Senha atual inválida.', message: 'Senha atual inválida.', fields: {} },
+      { status: 409, detail: 'Este e-mail já está em uso.', message: 'Este e-mail já está em uso.', fields: {} },
+    ]
+    for (const item of cases) {
+      const fetchMock = context.mock.method(globalThis, 'fetch', async () => (
+        new Response(JSON.stringify({ detail: item.detail }), {
+          status: item.status,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      ))
+      await assert.rejects(request('/auth/email-change/request', { method: 'POST', body: '{}' }), error => {
+        assert.ok(error instanceof ApiError)
+        assert.equal(error.status, item.status)
+        assert.equal(error.message, item.message)
+        assert.deepEqual(error.fieldErrors, item.fields)
+        return true
+      })
+      fetchMock.mock.restore()
+    }
+  } finally {
+    process.env.VITE_API_URL = ''
+    if (storageDescriptor) Object.defineProperty(globalThis, 'sessionStorage', storageDescriptor)
+    else delete globalThis.sessionStorage
+  }
 })
