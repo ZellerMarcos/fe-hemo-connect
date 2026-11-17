@@ -6,7 +6,10 @@ import { Button } from '../components/ui/button'
 import { BrandLogo } from '../components/BrandLogo'
 import { Input } from '../components/ui/input'
 import { entrar } from '../services/auth'
-import type { LoginTwoFactorResponse } from '../types/auth'
+import { ApiError } from '../services/api'
+import type { LoginRequest, LoginTwoFactorResponse } from '../types/auth'
+
+type LoginFieldErrors = Partial<Record<keyof LoginRequest, string>>
 
 interface LoginProps {
   onTwoFactor: (challenge: LoginTwoFactorResponse) => void
@@ -20,6 +23,7 @@ export function Login({ onTwoFactor, onIrParaCadastro, onEsqueciSenha, mensagemS
   const [senha, setSenha] = useState('')
   const [mostrarSenha, setMostrarSenha] = useState(false)
   const [erro, setErro] = useState('')
+  const [errosCampos, setErrosCampos] = useState<LoginFieldErrors>({})
   const [carregando, setCarregando] = useState(false)
   const activeRef = useRef(true)
 
@@ -32,16 +36,29 @@ export function Login({ onTwoFactor, onIrParaCadastro, onEsqueciSenha, mensagemS
     // A submissão valida primeiro o formulário local e então repassa a requisição ao backend.
     event.preventDefault()
     setErro('')
-    if (!email.trim() || !senha) {
-      // Evita requisição vazia e orienta o usuário a preencher os campos obrigatórios.
-      setErro('Informe seu e-mail e sua senha.')
+    setErrosCampos({})
+    const form = event.currentTarget
+    const emailInput = form.elements.namedItem('email')
+    const normalizedEmail = email.trim()
+    const fieldErrors: LoginFieldErrors = {}
+    if (!normalizedEmail) {
+      fieldErrors.email = 'Informe seu e-mail.'
+    } else if (emailInput instanceof HTMLInputElement && emailInput.validity.typeMismatch) {
+      fieldErrors.email = 'Informe um endereço de e-mail válido.'
+    }
+    if (!senha) fieldErrors.senha = 'Informe sua senha.'
+    if (fieldErrors.email || fieldErrors.senha) {
+      setErrosCampos(fieldErrors)
+      setErro('Confira os campos destacados.')
+      const input = form.elements.namedItem(fieldErrors.email ? 'email' : 'senha')
+      if (input instanceof HTMLElement) input.focus()
       return
     }
 
     setCarregando(true)
     try {
       // O backend responde com 2FA quando a credencial é válida, antes de concluir a sessão.
-      const response = await entrar({ email, senha })
+      const response = await entrar({ email: normalizedEmail, senha })
       // Uma resposta tardia nao pode recriar o desafio depois de sair ou cancelar o login.
       if (!activeRef.current) return
       // Tipos TypeScript nao validam JSON em runtime; rejeita contrato antigo ou incompleto.
@@ -57,9 +74,13 @@ export function Login({ onTwoFactor, onIrParaCadastro, onEsqueciSenha, mensagemS
       onTwoFactor(response)
     } catch (error) {
       if (!activeRef.current) return
-      // O frontend reutiliza a mensagem detalhada do backend, inclusive o número de tentativas restantes e o bloqueio do usuário.
-      const mensagem = error instanceof Error ? error.message : 'E-mail ou senha inválidos.'
-      setErro(mensagem)
+      if (error instanceof ApiError && (error.fieldErrors.email || error.fieldErrors.senha)) {
+        setErrosCampos({ email: error.fieldErrors.email, senha: error.fieldErrors.senha })
+        setErro('Confira os campos destacados.')
+      } else {
+        const mensagem = error instanceof Error ? error.message : 'E-mail ou senha inválidos.'
+        setErro(mensagem)
+      }
     } finally {
       if (activeRef.current) setCarregando(false)
     }
@@ -77,27 +98,49 @@ export function Login({ onTwoFactor, onIrParaCadastro, onEsqueciSenha, mensagemS
         <p className="mt-4 rounded-xl bg-red-100 px-3 py-2 text-sm text-red-800" role="alert">{mensagemSessaoExpirada}</p>
       )}
       <form onSubmit={handleSubmit} noValidate className="mt-6 grid gap-4">
-        <label className="grid gap-2 text-sm font-semibold text-zinc-700">
-          <span className="inline-flex items-center gap-2">
+        <div className="grid gap-2 text-sm font-semibold text-zinc-700">
+          <label htmlFor="login-email" className="inline-flex items-center gap-2">
             <MailCheck size={16} className="text-zinc-500" />
             E-mail
-          </span>
+          </label>
           <div>
-            <Input type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" required />
+            <Input
+              id="login-email" name="email" type="email" value={email}
+              onChange={(event) => {
+                setEmail(event.target.value)
+                setErrosCampos(current => ({ ...current, email: undefined }))
+                setErro('')
+              }}
+              autoComplete="email" required
+              aria-invalid={Boolean(errosCampos.email)}
+              aria-describedby={errosCampos.email ? 'login-email-error' : undefined}
+            />
           </div>
-        </label>
-        <label className="grid gap-2 text-sm font-semibold text-zinc-700">
-          <span className="inline-flex items-center gap-2">
+          {errosCampos.email && <p id="login-email-error" className="font-normal text-red-800" role="alert">{errosCampos.email}</p>}
+        </div>
+        <div className="grid gap-2 text-sm font-semibold text-zinc-700">
+          <label htmlFor="login-senha" className="inline-flex items-center gap-2">
             <KeyRound size={16} className="text-zinc-500" />
             Senha
-          </span>
+          </label>
           <div className="relative">
-            <Input type={mostrarSenha ? 'text' : 'password'} value={senha} onChange={(event) => setSenha(event.target.value)} autoComplete="current-password" className="pr-12" required />
+            <Input
+              id="login-senha" name="senha" type={mostrarSenha ? 'text' : 'password'} value={senha}
+              onChange={(event) => {
+                setSenha(event.target.value)
+                setErrosCampos(current => ({ ...current, senha: undefined }))
+                setErro('')
+              }}
+              autoComplete="current-password" className="pr-12" required
+              aria-invalid={Boolean(errosCampos.senha)}
+              aria-describedby={errosCampos.senha ? 'login-senha-error' : undefined}
+            />
             <button className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-zinc-500 hover:bg-red-50" type="button" onClick={() => setMostrarSenha((current) => !current)} aria-label={mostrarSenha ? 'Ocultar senha' : 'Mostrar senha'}>
               {mostrarSenha ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
           </div>
-        </label>
+          {errosCampos.senha && <p id="login-senha-error" className="font-normal text-red-800" role="alert">{errosCampos.senha}</p>}
+        </div>
         {erro && <p className="rounded-xl bg-red-100 px-3 py-2 text-sm text-red-800" role="alert">{erro}</p>}
         <Button type="submit" disabled={carregando}>
           <LogIn size={16} />

@@ -33,6 +33,8 @@ export class ApiError extends Error {
 }
 
 const VALIDATION_FIELD_LABELS: Record<string, string> = {
+  email: 'E-mail',
+  senha: 'Senha',
   new_email: 'Novo e-mail',
   current_password: 'Senha atual',
   fuso_horario: 'Fuso horário',
