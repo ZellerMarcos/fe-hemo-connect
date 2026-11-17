@@ -22,13 +22,19 @@ function resolveApiUrl(): string {
 }
 
 export class ApiError extends Error {
-  constructor(message: string, public readonly status: number) {
+  constructor(
+    message: string,
+    public readonly status: number,
+    public readonly fieldErrors: Readonly<Record<string, string>> = {},
+  ) {
     super(message)
     this.name = 'ApiError'
   }
 }
 
 const VALIDATION_FIELD_LABELS: Record<string, string> = {
+  new_email: 'Novo e-mail',
+  current_password: 'Senha atual',
   fuso_horario: 'Fuso horário',
   duracao_minutos: 'Duração do horário',
   capacidade: 'Vagas por horário',
@@ -65,13 +71,18 @@ function validationLocation(location: unknown): string {
   return parts.join(' > ')
 }
 
-function formatValidationErrors(detail: unknown): string | null {
+function formatValidationErrors(detail: unknown): { message: string; fieldErrors: Record<string, string> } | null {
   if (!Array.isArray(detail)) return null
+  const fieldErrors = new Map<string, string>()
   const messages = detail.flatMap(item => {
     if (typeof item !== 'object' || item === null || !('msg' in item) || typeof item.msg !== 'string') {
       return []
     }
-    const location = 'loc' in item ? validationLocation(item.loc) : ''
+    const parts = 'loc' in item ? item.loc : undefined
+    const location = validationLocation(parts)
+    if (Array.isArray(parts) && parts.length === 2 && parts[0] === 'body' && typeof parts[1] === 'string') {
+      fieldErrors.set(parts[1], item.msg)
+    }
     return [`${location ? `${location}: ` : ''}${item.msg}`]
   })
   if (messages.length === 0) return null
@@ -79,7 +90,7 @@ function formatValidationErrors(detail: unknown): string | null {
   if (messages.length > visibleMessages.length) {
     visibleMessages.push(`E mais ${messages.length - visibleMessages.length} erro(s) de validação.`)
   }
-  return visibleMessages.join('\n')
+  return { message: visibleMessages.join('\n'), fieldErrors: Object.fromEntries(fieldErrors) }
 }
 
 // A função request centraliza a comunicação HTTP da aplicação, padronizando URL base, headers e tratamento de erros do backend.
@@ -98,13 +109,18 @@ export async function request<T>(path: string, options: RequestInit = {}): Promi
   if (!response.ok) {
     // O cliente transforma qualquer falha HTTP em uma exceção padronizada para as páginas.
     let message = 'Não foi possível concluir a operação.'
+    let fieldErrors: Record<string, string> = {}
     try {
       const body: { detail?: unknown } = await response.json()
       // Erros internos nao devem expor detalhes de infraestrutura retornados pela API.
       if (response.status < 500 && typeof body.detail === 'string') message = body.detail
       if (response.status === 422) {
-        message = formatValidationErrors(body.detail)
-          ?? 'A API rejeitou os dados. Confira os campos informados e tente novamente.'
+        const validation = formatValidationErrors(body.detail)
+        message = validation?.message
+          ?? (typeof body.detail === 'string' && body.detail.trim()
+            ? body.detail
+            : 'A API rejeitou os dados. Confira os campos informados e tente novamente.')
+        fieldErrors = validation?.fieldErrors ?? {}
       }
     } catch (error) {
       if (!(error instanceof SyntaxError)) throw error
@@ -120,7 +136,7 @@ export async function request<T>(path: string, options: RequestInit = {}): Promi
         message += ` Tente novamente em ${retryAfter} segundos.`
       }
     }
-    throw new ApiError(message, response.status)
+    throw new ApiError(message, response.status, fieldErrors)
   }
 
   if (response.status === 204) return undefined as T
