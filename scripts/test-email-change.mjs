@@ -81,8 +81,22 @@ test('API errors preserve text and expose validation fields without changing 403
         status: 422, detail: null,
         message: 'A API rejeitou os dados. Confira os campos informados e tente novamente.', fields: {},
       },
+      {
+        path: '/auth/login',
+        status: 422,
+        detail: [
+          { loc: ['body', 'email'], type: 'value_error', msg: 'Informe um endereço de e-mail válido.' },
+          { loc: ['body', 'senha'], type: 'missing', msg: 'Informe sua senha.' },
+        ],
+        message: 'E-mail: Informe um endereço de e-mail válido.\nSenha: Informe sua senha.',
+        fields: { email: 'Informe um endereço de e-mail válido.', senha: 'Informe sua senha.' },
+      },
       { status: 403, detail: 'Senha atual inválida.', message: 'Senha atual inválida.', fields: {} },
       { status: 409, detail: 'Este e-mail já está em uso.', message: 'Este e-mail já está em uso.', fields: {} },
+      {
+        path: '/auth/login', status: 401,
+        detail: 'E-mail ou senha inválidos.', message: 'E-mail ou senha inválidos.', fields: {},
+      },
     ]
     for (const item of cases) {
       const fetchMock = context.mock.method(globalThis, 'fetch', async () => (
@@ -91,7 +105,7 @@ test('API errors preserve text and expose validation fields without changing 403
           headers: { 'Content-Type': 'application/json' },
         })
       ))
-      await assert.rejects(request('/auth/email-change/request', { method: 'POST', body: '{}' }), error => {
+      await assert.rejects(request(item.path ?? '/auth/email-change/request', { method: 'POST', body: '{}' }), error => {
         assert.ok(error instanceof ApiError)
         assert.equal(error.status, item.status)
         assert.equal(error.message, item.message)

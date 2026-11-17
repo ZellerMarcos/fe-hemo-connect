@@ -331,6 +331,12 @@ Senha incorreta (403) e e-mail indisponivel (409) continuam sendo apresentados
 sem alterar o fluxo de confirmacao. Publique ambos os repositorios para
 habilitar os detalhes seguros por campo.
 
+O login tambem valida formato e campos obrigatorios e apresenta erros 422
+junto a **E-mail** ou **Senha**, sem confundi-los com credenciais invalidas
+(401) ou bloqueio temporario (403). Remove apenas espacos externos do e-mail,
+nao da senha. Apos confirmar uma troca, utilize o novo endereco confirmado
+e a mesma senha; o codigo de 2FA sera enviado ao novo e-mail.
+
 No deploy, mantenha o rewrite SPA de `render.yaml` para servir `/confirm-email`
 sem redirecionar o navegador para `/index.html` ou `/reset-password`, preservando
 o caminho e a query string. `FRONTEND_URL` no backend deve conter somente a
