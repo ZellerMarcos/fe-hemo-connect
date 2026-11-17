@@ -10,5 +10,17 @@
     "comment": "Public route constant in src/routes.ts (forgot/reset password URL), not a credential. Reviewed 2026-11-02; re-review by 2026-12-02. Only this fingerprint is excluded; the hardcoded-secret rule remains enabled.",
     "false_positive": true,
     "ignored_at": "2026-11-03T02:18:15Z"
+  },
+  "2694b794fe47fad14fb0e7298a4c0ab4_0": {
+    "author": "Hemo Connect",
+    "comment": "User-facing required-field validation message for current_password in src/pages/MeuPerfil.tsx, not a credential. Only this finding fingerprint is excluded; the hardcoded-secret rule remains enabled.",
+    "false_positive": true,
+    "ignored_at": "2026-11-17T02:07:00Z"
+  },
+  "9aee0d77cac598868561fde85e85c3e8_0": {
+    "author": "Hemo Connect",
+    "comment": "Display label for the current_password validation field in src/services/api.ts, not a credential. Only this finding fingerprint is excluded; the hardcoded-secret rule remains enabled.",
+    "false_positive": true,
+    "ignored_at": "2026-11-17T02:07:00Z"
   }
 }
